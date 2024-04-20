@@ -34,7 +34,7 @@ class BaselineConfig:
     key = jr.PRNGKey(43)
     
     # How many unique programs (organisms) are allowed in the simulation.
-    n_max_programs = 2
+    n_max_programs = 3
 
     # if True, every 50 steps we check whether the agents go extinct. If they did,
     # we replace a seed in the environment.
@@ -44,7 +44,7 @@ class BaselineConfig:
     # The total number of steps depend on the number of steps per frame, which can
     # vary over time.
     # In the article, we generally use 500 or 750 frames.
-    n_frames = 500
+    n_frames = 125
 
     # on what FRAME to double speed.
     when_to_double_speed = [100, 200, 300, 400, 500]
@@ -89,6 +89,66 @@ def make_frame(env, step, speed, env_config, zoom_sz):
 
 def count_agents_f(env, etd):
     return etd.is_agent_fn(env.type_grid).sum()
+
+
+def perform_simulation(env, programs, base_config, env_config, agent_logic, mutator, key):
+    step = 0
+    frame = make_frame(env, step, speed=base_config.steps_per_frame, env_config=env_config, zoom_sz=base_config.zoom_sz)
+
+    with media.VideoWriter(base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18) as video:
+        video.add_image(frame)
+        for i in tqdm.trange(base_config.n_frames):
+            if i in base_config.when_to_double_speed:
+                base_config.steps_per_frame *= 2
+            if i in base_config.when_to_reset_speed:
+                base_config.steps_per_frame = 1
+            for j in range(base_config.steps_per_frame):
+                step += 1
+                key, ku = jr.split(key)
+                env, programs = step_env(
+                    ku,
+                    env,
+                    env_config,
+                    agent_logic,
+                    programs,
+                    do_reproduction=True,
+                    mutate_programs=True,
+                    mutator=mutator,
+                )
+                if base_config.replace_if_extinct and step % 50 == 0:
+                    # check if there is no alive cell.
+                    any_alive = jit(lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0)(
+                        env.type_grid
+                    )
+                    if not any_alive:
+                        # Then place a new seed.
+                        agent_init_nutrients = (
+                            env_config.dissipation_per_step * 4 + env_config.specialize_cost
+                        )
+                        ku, key = jr.split(key)
+                        rpos = jp.stack(
+                            [
+                                0,
+                                jr.randint(ku, (), minval=0, maxval=env.type_grid.shape[1]),
+                            ],
+                            0,
+                        )
+                        ku, key = jr.split(key)
+                        raid = jr.randint(ku, (), minval=0, maxval=base_config.n_max_programs).astype(
+                            jp.uint32
+                        )
+                        repr_op = ReproduceOp(1.0, rpos, agent_init_nutrients * 2, raid)
+                        ku, key = jr.split(key)
+                        env = jit(partial(env_perform_one_reproduce_op, config=env_config))(
+                            ku, env, repr_op
+                        )
+
+                        # show it, though
+                        frame = make_frame(env, step, base_config.steps_per_frame)
+                        for stop_i in range(10):
+                            video.add_image(frame)
+
+            video.add_image(make_frame(env, step, base_config.steps_per_frame, env_config, base_config.zoom_sz))
 
 
 @partial(
@@ -150,7 +210,7 @@ def evaluation(env, programs, st_env, env_config, agent_logic, mutator, base_con
     else:
         # Extract a living program from the final environment.
         aid_flat = env.agent_id_grid.flatten()
-        is_agent_flat = evm.is_agent_fn(env.type_grid).flatten().astype(jp.float32)
+        is_agent_flat = env_config.etd.is_agent_fn(env.type_grid).flatten().astype(jp.float32)
         n_alive_per_id = jax.ops.segment_sum(
             is_agent_flat, aid_flat, num_segments=base_config.n_max_programs
         )
@@ -166,7 +226,6 @@ def evaluation(env, programs, st_env, env_config, agent_logic, mutator, base_con
         vmap(
             partial(
                 evaluate_biome,
-                key=key,
                 st_env=st_env,
                 config=env_config,
                 agent_logic=agent_logic,
@@ -184,6 +243,8 @@ def evaluation(env, programs, st_env, env_config, agent_logic, mutator, base_con
     )
     print("Extinction events", b_is_extinct, b_is_extinct.mean(), b_is_extinct.std())
 
+
+ 
 
 def main():
     base_config = BaselineConfig()
@@ -205,70 +266,11 @@ def main():
 
     ku, key = jr.split(base_config.key)
     programs = vmap(agent_logic.initialize)(jr.split(ku, base_config.n_max_programs))
-    # ku, key = jr.split(base_config.key)
     programs = vmap(mutator.initialize)(jr.split(ku, programs.shape[0]), programs)
 
     env = st_env
 
-    step = 0
-
-    # Perform a simulation
-    frame = make_frame(env, step, speed=base_config.steps_per_frame, env_config=env_config, zoom_sz=base_config.zoom_sz)
-
-    with media.VideoWriter(base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18) as video:
-        video.add_image(frame)
-        for i in tqdm.trange(base_config.n_frames):
-            if i in base_config.when_to_double_speed:
-                base_config.steps_per_frame *= 2
-            if i in base_config.when_to_reset_speed:
-                base_config.steps_per_frame = 1
-            for j in range(base_config.steps_per_frame):
-                step += 1
-                key, ku = jr.split(key)
-                env, programs = step_env(
-                    ku,
-                    env,
-                    env_config,
-                    agent_logic,
-                    programs,
-                    do_reproduction=True,
-                    mutate_programs=True,
-                    mutator=mutator,
-                )
-                if base_config.replace_if_extinct and step % 50 == 0:
-                    # check if there is no alive cell.
-                    any_alive = jit(lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0)(
-                        env.type_grid
-                    )
-                    if not any_alive:
-                        # Then place a new seed.
-                        agent_init_nutrients = (
-                            env_config.dissipation_per_step * 4 + env_config.specialize_cost
-                        )
-                        ku, key = jr.split(key)
-                        rpos = jp.stack(
-                            [
-                                0,
-                                jr.randint(ku, (), minval=0, maxval=env.type_grid.shape[1]),
-                            ],
-                            0,
-                        )
-                        ku, key = jr.split(key)
-                        raid = jr.randint(ku, (), minval=0, maxval=base_config.n_max_programs).astype(
-                            jp.uint32
-                        )
-                        repr_op = ReproduceOp(1.0, rpos, agent_init_nutrients * 2, raid)
-                        ku, key = jr.split(key)
-                        env = jit(partial(env_perform_one_reproduce_op, config=env_config))(
-                            ku, env, repr_op
-                        )
-
-                        # show it, though
-                        frame = make_frame(env, step, base_config.steps_per_frame)
-                        for stop_i in range(10):
-                            video.add_image(frame)
-
-            video.add_image(make_frame(env, step, base_config.steps_per_frame, env_config, base_config.zoom_sz))
+    perform_simulation(env, programs, base_config, env_config, agent_logic, mutator, key)
 
     evaluation(env, programs, st_env, env_config, agent_logic, mutator, base_config)
     
