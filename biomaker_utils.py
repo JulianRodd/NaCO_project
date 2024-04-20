@@ -14,12 +14,17 @@ from self_organising_systems.biomakerca.agent_logic import BasicAgentLogic
 from self_organising_systems.biomakerca.custom_ipython_display import display
 from self_organising_systems.biomakerca.display_utils import zoom
 from self_organising_systems.biomakerca.env_logic import (
-    ReproduceOp, env_perform_one_reproduce_op)
+    ReproduceOp,
+    env_perform_one_reproduce_op,
+)
 from self_organising_systems.biomakerca.mutators import (
-    BasicMutator, RandomlyAdaptiveMutator)
+    BasicMutator,
+    RandomlyAdaptiveMutator,
+)
 from self_organising_systems.biomakerca.step_maker import step_env
 
 from configs.base_config import BaselineConfig
+
 
 def pad_text(img, text):
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -42,15 +47,26 @@ def make_frame(env, step, speed, env_config, zoom_sz):
         "Step {:<7} Speed: {}x".format(step, speed),
     )
 
+
 def count_agents_f(env, etd):
     return etd.is_agent_fn(env.type_grid).sum()
 
 
-def perform_simulation(env, programs, base_config, env_config, agent_logic, mutator, key):
+def perform_simulation(
+    env, programs, base_config, env_config, agent_logic, mutator, key
+):
     step = 0
-    frame = make_frame(env, step, speed=base_config.steps_per_frame, env_config=env_config, zoom_sz=base_config.zoom_sz)
+    frame = make_frame(
+        env,
+        step,
+        speed=base_config.steps_per_frame,
+        env_config=env_config,
+        zoom_sz=base_config.zoom_sz,
+    )
 
-    with media.VideoWriter(base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18) as video:
+    with media.VideoWriter(
+        base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18
+    ) as video:
         video.add_image(frame)
         for i in tqdm.trange(base_config.n_frames):
             if i in base_config.when_to_double_speed:
@@ -72,38 +88,49 @@ def perform_simulation(env, programs, base_config, env_config, agent_logic, muta
                 )
                 if base_config.replace_if_extinct and step % 50 == 0:
                     # check if there is no alive cell.
-                    any_alive = jit(lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0)(
-                        env.type_grid
-                    )
+                    any_alive = jit(
+                        lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0
+                    )(env.type_grid)
                     if not any_alive:
                         # Then place a new seed.
                         agent_init_nutrients = (
-                            env_config.dissipation_per_step * 4 + env_config.specialize_cost
+                            env_config.dissipation_per_step * 4
+                            + env_config.specialize_cost
                         )
                         ku, key = jr.split(key)
                         rpos = jp.stack(
                             [
                                 0,
-                                jr.randint(ku, (), minval=0, maxval=env.type_grid.shape[1]),
+                                jr.randint(
+                                    ku, (), minval=0, maxval=env.type_grid.shape[1]
+                                ),
                             ],
                             0,
                         )
                         ku, key = jr.split(key)
-                        raid = jr.randint(ku, (), minval=0, maxval=base_config.n_max_programs).astype(
-                            jp.uint32
-                        )
+                        raid = jr.randint(
+                            ku, (), minval=0, maxval=base_config.n_max_programs
+                        ).astype(jp.uint32)
                         repr_op = ReproduceOp(1.0, rpos, agent_init_nutrients * 2, raid)
                         ku, key = jr.split(key)
-                        env = jit(partial(env_perform_one_reproduce_op, config=env_config))(
-                            ku, env, repr_op
-                        )
+                        env = jit(
+                            partial(env_perform_one_reproduce_op, config=env_config)
+                        )(ku, env, repr_op)
 
                         # show it, though
                         frame = make_frame(env, step, base_config.steps_per_frame)
                         for stop_i in range(10):
                             video.add_image(frame)
 
-            video.add_image(make_frame(env, step, base_config.steps_per_frame, env_config, base_config.zoom_sz))
+            video.add_image(
+                make_frame(
+                    env,
+                    step,
+                    base_config.steps_per_frame,
+                    env_config,
+                    base_config.zoom_sz,
+                )
+            )
 
 
 @partial(
@@ -155,7 +182,9 @@ def evaluate_biome(
     return tot_agents_n, is_extinct
 
 
-def perform_evaluation(env, programs, st_env, env_config, agent_logic, mutator, base_config):
+def perform_evaluation(
+    env, programs, st_env, env_config, agent_logic, mutator, base_config
+):
     # Evaluate the configuration
     # With this code, you can either evaluate a randomly initialized model, or models extracted from the previous run.
     # In the latter case, make sure that there are agents alive at the end of the simulation.
@@ -165,15 +194,19 @@ def perform_evaluation(env, programs, st_env, env_config, agent_logic, mutator, 
     else:
         # Extract a living program from the final environment.
         aid_flat = env.agent_id_grid.flatten()
-        is_agent_flat = env_config.etd.is_agent_fn(env.type_grid).flatten().astype(jp.float32)
+        is_agent_flat = (
+            env_config.etd.is_agent_fn(env.type_grid).flatten().astype(jp.float32)
+        )
         n_alive_per_id = jax.ops.segment_sum(
             is_agent_flat, aid_flat, num_segments=base_config.n_max_programs
         )
         alive_programs = programs[n_alive_per_id > 0]
         print("Extracted {} programs.".format(alive_programs.shape[0]))
-        assert alive_programs.shape[0] >= base_config.n_eval_reps, "Not enough alive programs found."
+        assert (
+            alive_programs.shape[0] >= base_config.n_eval_reps
+        ), "Not enough alive programs found."
 
-        init_programs = alive_programs[:base_config.n_eval_reps]
+        init_programs = alive_programs[: base_config.n_eval_reps]
 
     t_st = time.time()
     key, ku = jr.split(base_config.eval_key)
@@ -199,17 +232,23 @@ def perform_evaluation(env, programs, st_env, env_config, agent_logic, mutator, 
     print("Extinction events", b_is_extinct, b_is_extinct.mean(), b_is_extinct.std())
 
 
- 
-
 def main():
     base_config = BaselineConfig()
 
-    st_env, env_config = evm.get_env_and_config(base_config.ec_id, width_type=base_config.env_width_type)
+    st_env, env_config = evm.get_env_and_config(
+        base_config.ec_id, width_type=base_config.env_width_type
+    )
     env_config.soil_unbalance_limit = base_config.soil_unbalance_limit
 
-    agent_logic = BasicAgentLogic(env_config, minimal_net=base_config.agent_model == "minimal")
+    agent_logic = BasicAgentLogic(
+        env_config, minimal_net=base_config.agent_model == "minimal"
+    )
 
-    sd = 1e-2 if base_config.mutator_type == "basic" and base_config.agent_model == "basic" else 1e-3
+    sd = (
+        1e-2
+        if base_config.mutator_type == "basic" and base_config.agent_model == "basic"
+        else 1e-3
+    )
     mutator = (
         BasicMutator(sd=sd, change_perc=0.2)
         if base_config.mutator_type == "basic"
@@ -225,10 +264,14 @@ def main():
 
     env = st_env
 
-    perform_simulation(env, programs, base_config, env_config, agent_logic, mutator, key)
+    perform_simulation(
+        env, programs, base_config, env_config, agent_logic, mutator, key
+    )
 
-    perform_evaluation(env, programs, st_env, env_config, agent_logic, mutator, base_config)
-    
+    perform_evaluation(
+        env, programs, st_env, env_config, agent_logic, mutator, base_config
+    )
+
 
 if __name__ == "__main__":
     main()
