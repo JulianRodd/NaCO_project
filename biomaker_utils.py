@@ -39,10 +39,14 @@ def pad_text(img, text):
     return img
 
 
-def make_frame(env, step, speed, env_config, zoom_sz):
+def make_frame(env, step, speed, env_config, zoom_sz, season):
+    if season == "":
+      padText = "Step {:<7} Speed: {}x".format(step, speed)
+    else: 
+      padText = "Step {:<7} Speed: {}x   Season: {}".format(step, speed, season)
     return pad_text(
         zoom(evm.grab_image_from_env(env, env_config), zoom_sz),
-        "Step {:<7} Speed: {}x".format(step, speed),
+        padText,
     )
 
 
@@ -60,7 +64,7 @@ def start_simulation(env, base_config, env_config):
 
 
 def perform_simulation(
-    env, programs, base_config, env_config, agent_logic, mutator, key, video, frame
+    env, programs, base_config, env_config, agent_logic, mutator, key, video, frame, season = ""
 ):
     step = 0
     video.add_image(frame)
@@ -113,7 +117,7 @@ def perform_simulation(
                     )
 
                     # show it, though
-                    frame = make_frame(env, step, base_config.steps_per_frame)
+                    frame = make_frame(env, step, base_config.steps_per_frame, season)
                     for stop_i in range(10):
                         video.add_image(frame)
 
@@ -124,6 +128,7 @@ def perform_simulation(
                 base_config.steps_per_frame,
                 env_config,
                 base_config.zoom_sz,
+                season
             )
         )
 
