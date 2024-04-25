@@ -58,8 +58,9 @@ def start_simulation(env, base_config, env_config):
 
 
 def perform_simulation(
-    env, programs, base_config, env_config, agent_logic, mutator, key, video
+    env, programs, base_config, env_config, agent_logic, mutator, key, video, frame
 ):
+    step = 0
     video.add_image(frame)
     for i in tqdm.trange(base_config.n_frames):
         if i in base_config.when_to_double_speed:
