@@ -2,10 +2,10 @@ import jax.random as jr
 
 
 class BaselineConfig:
-    out_file = "video_baseline.mp4"
-    ec_id = "persistence"  # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
-    env_width_type = "landscape"  # @param ['wide', 'landscape', 'square', 'petri']
-
+    out_file = "video_seasons.mp4"
+    ec_id = "persistence"       # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
+    env_width_type = "landscape"   # @param ['wide', 'landscape', 'square', 'petri']
+    
     # Set soil_unbalance_limit to 0 to reproduce the original environment. Set it to 1/3 for having self-balancing environments (recommended).
     soil_unbalance_limit = 0  # @param [0, "1/3"] {type:"raw"}
 
