@@ -45,3 +45,7 @@ class BaselineConfig:
     n_eval_steps = 100
     n_eval_reps = 1
     eval_key = jr.PRNGKey(123)
+    
+    # From 0 until 0.15, default = 0.1
+    AIR_DIFFUSION_RATE = 0.1
+    SOIL_DIFFUSION_RATE = 0.1

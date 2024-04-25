@@ -1516,7 +1516,7 @@ def process_structural_integrity_n_times(
 # I might eventually refactor that to remove 'energy' everywhere.
 
 
-def process_energy(env: Environment, config: EnvConfig) -> Environment:
+def process_energy(env: Environment, config: EnvConfig, soil_diffusion_rate = 0.1, air_diffusion_rate = 0.1) -> Environment:
   """Process one step of energy transfer and dissipation.
   
   This function works in different steps:
@@ -1548,7 +1548,7 @@ def process_energy(env: Environment, config: EnvConfig) -> Environment:
       config.material_nutrient_cap[evm.EARTH_NUTRIENT_RPOS
                                    ] * is_immovable_grid_f)
   # diffuse this nutrient to all earth (+ immovable, which remains unchanged).
-  EARTH_DIFFUSION_RATE = 0.0001
+  EARTH_DIFFUSION_RATE = soil_diffusion_rate
   neigh_earth_nutrient = jax.lax.conv_general_dilated_patches(
       earth_nutrient[None,:,:, None],
       (3, 3), (1, 1), "SAME", dimension_numbers=("NHWC", "OIHW", "NHWC"))[0]
@@ -1568,7 +1568,7 @@ def process_energy(env: Environment, config: EnvConfig) -> Environment:
       env.state_grid[:,:, evm.EN_ST+evm.AIR_NUTRIENT_RPOS] * is_air_grid_f +
       config.material_nutrient_cap[evm.AIR_NUTRIENT_RPOS] * is_sun_grid_f)
   # diffuse this nutrient to all air (+ sun, which remains unchanged.)
-  AIR_DIFFUSION_RATE = 0.0001
+  AIR_DIFFUSION_RATE = air_diffusion_rate
 
   # compute neighbors
   neigh_air_nutrient = jax.lax.conv_general_dilated_patches(

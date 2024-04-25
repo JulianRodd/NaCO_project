@@ -5,18 +5,20 @@ import cv2
 import jax
 import jax.numpy as jp
 import jax.random as jr
-import mediapy as media
 import numpy as np
 import tqdm
 from jax import jit, vmap
 from self_organising_systems.biomakerca import environments as evm
 from self_organising_systems.biomakerca.agent_logic import BasicAgentLogic
-from self_organising_systems.biomakerca.custom_ipython_display import display
 from self_organising_systems.biomakerca.display_utils import zoom
 from self_organising_systems.biomakerca.env_logic import (
-    ReproduceOp, env_perform_one_reproduce_op)
+    ReproduceOp,
+    env_perform_one_reproduce_op,
+)
 from self_organising_systems.biomakerca.mutators import (
-    BasicMutator, RandomlyAdaptiveMutator)
+    BasicMutator,
+    RandomlyAdaptiveMutator,
+)
 from self_organising_systems.biomakerca.step_maker import step_env
 
 from configs.base_config import BaselineConfig
@@ -79,25 +81,24 @@ def perform_simulation(
                 do_reproduction=True,
                 mutate_programs=True,
                 mutator=mutator,
+                soil_diffusion_rate=base_config.SOIL_DIFFUSION_RATE,
+                air_diffusion_rate=base_config.AIR_DIFFUSION_RATE,
             )
             if base_config.replace_if_extinct and step % 50 == 0:
                 # check if there is no alive cell.
-                any_alive = jit(
-                    lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0
-                )(env.type_grid)
+                any_alive = jit(lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0)(
+                    env.type_grid
+                )
                 if not any_alive:
                     # Then place a new seed.
                     agent_init_nutrients = (
-                        env_config.dissipation_per_step * 4
-                        + env_config.specialize_cost
+                        env_config.dissipation_per_step * 4 + env_config.specialize_cost
                     )
                     ku, key = jr.split(key)
                     rpos = jp.stack(
                         [
                             0,
-                            jr.randint(
-                                ku, (), minval=0, maxval=env.type_grid.shape[1]
-                            ),
+                            jr.randint(ku, (), minval=0, maxval=env.type_grid.shape[1]),
                         ],
                         0,
                     )
@@ -107,9 +108,9 @@ def perform_simulation(
                     ).astype(jp.uint32)
                     repr_op = ReproduceOp(1.0, rpos, agent_init_nutrients * 2, raid)
                     ku, key = jr.split(key)
-                    env = jit(
-                        partial(env_perform_one_reproduce_op, config=env_config)
-                    )(ku, env, repr_op)
+                    env = jit(partial(env_perform_one_reproduce_op, config=env_config))(
+                        ku, env, repr_op
+                    )
 
                     # show it, though
                     frame = make_frame(env, step, base_config.steps_per_frame)

@@ -3,16 +3,16 @@ import jax.random as jr
 
 class BaselineConfig:
     out_file = "video_baseline.mp4"
-    ec_id = "persistence"       # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
-    env_width_type = "square"   # @param ['wide', 'landscape', 'square', 'petri']
-    
+    ec_id = "persistence"  # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
+    env_width_type = "landscape"  # @param ['wide', 'landscape', 'square', 'petri']
+
     # Set soil_unbalance_limit to 0 to reproduce the original environment. Set it to 1/3 for having self-balancing environments (recommended).
-    soil_unbalance_limit = 0    # @param [0, "1/3"] {type:"raw"}
-    
-    agent_model = "minimal"     # @param ['minimal', 'extended']
-    mutator_type = "basic"      # @param ['basic', 'randomly_adaptive']
+    soil_unbalance_limit = 0  # @param [0, "1/3"] {type:"raw"}
+
+    agent_model = "minimal"  # @param ['minimal', 'extended']
+    mutator_type = "basic"  # @param ['basic', 'randomly_adaptive']
     key = jr.PRNGKey(43)
-    
+
     # How many unique programs (organisms) are allowed in the simulation.
     n_max_programs = 3
 
@@ -39,9 +39,12 @@ class BaselineConfig:
     # during the simulation.
     # In the article, we usually use 2 or 4 as the starting value, sometimes 1.
     steps_per_frame = 2
-    
+
     ### Evaluation ###
     what_to_evaluate = "extracted"  # @param ["initialization", "extracted"]
     n_eval_steps = 100
     n_eval_reps = 1
     eval_key = jr.PRNGKey(123)
+    # From 0 until 0.15, default = 0.1
+    AIR_DIFFUSION_RATE = 0.1
+    SOIL_DIFFUSION_RATE = 0.1
