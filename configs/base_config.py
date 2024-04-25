@@ -2,7 +2,7 @@ import jax.random as jr
 
 
 class BaselineConfig:
-    out_file = "video_seasons.mp4"
+    out_file = "video_seasons_no_doubles.mp4"
     ec_id = "persistence"       # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
     env_width_type = "landscape"   # @param ['wide', 'landscape', 'square', 'petri']
     
@@ -27,7 +27,7 @@ class BaselineConfig:
     n_frames = 125
 
     # on what FRAME to double speed.
-    when_to_double_speed = [100, 200, 300, 400, 500]
+    when_to_double_speed = []
     # on what FRAME to reset speed.
     when_to_reset_speed = []
     fps = 20
