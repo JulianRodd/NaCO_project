@@ -1703,7 +1703,8 @@ def balance_soil(key: KeyType, env: Environment, config: EnvConfig):
   unbalance_limit = config.soil_unbalance_limit
   # This is currently hard coded. Feel free to change this if needed and
   # consider sending a pull request.
-  upd_perc = 0.05
+  #CHANGED BY JANNEKE
+  upd_perc = 0.95
   earth_min_r = jp.array(h * unbalance_limit, dtype=jp.int32)
   air_max_r = jp.array(h * (1 -unbalance_limit), dtype=jp.int32)
 
