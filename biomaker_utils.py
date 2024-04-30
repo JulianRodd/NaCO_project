@@ -137,6 +137,31 @@ def perform_simulation(
     jit,
     static_argnames=["config", "agent_logic", "mutator", "n_steps", "n_max_programs"],
 )
+
+
+def count_flowers(agent_logic, env): # added
+    flower_id = agent_logic.config.etd.specialization_idxs.AGENT_FLOWER
+    total_flowers = (env.agent_id_grid == flower_id).sum()
+
+    agentTypes = env.agent_id_grid
+
+    # Count of each type of agent
+    zeros = np.count_nonzero(agentTypes == 0)
+    ones = np.count_nonzero(agentTypes == 1)
+    twos = np.count_nonzero(agentTypes == 2)
+    threes = np.count_nonzero(agentTypes == 3)
+    four = np.count_nonzero(agentTypes == 4)
+    fives = np.count_nonzero(agentTypes == 5)
+
+    print("Count of all 0 in grid: ", zeros)
+    print("Count of all 1 in grid: ", ones)
+    print("Count of all 2 in grid: ", twos)
+    print("Count of all 3 in grid: ", threes)
+    print("Count of all 4 in grid: ", four)
+    print("Count of all 5 in grid: ", fives)
+
+    return total_flowers
+
 def evaluate_biome(
     key,
     st_env,
@@ -230,6 +255,14 @@ def perform_evaluation(
         b_tot_agents_n.std(),
     )
     print("Extinction events", b_is_extinct, b_is_extinct.mean(), b_is_extinct.std())
+
+
+    count_flowers(agent_logic, env)
+    #print("Number of flowers: ", count_flowers(agent_logic, env))# added
+
+    #logic = BasicAgentLogic(BasicAgentLogic)  # added
+    # print("Total flowers produced:", agent_logic.flowers_produced)# added
+    # print("Total seeds dispersed:", agent_logic.seeds_dispersed)# added
 
 
 def main():
