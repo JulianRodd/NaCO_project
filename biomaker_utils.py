@@ -130,7 +130,7 @@ def perform_simulation(
                 season
             )
         )
-    return step
+    return step, env, programs
 
 
 @partial(
