@@ -24,7 +24,7 @@ class SeasonsConfig:
     # The total number of steps depend on the number of steps per frame, which can
     # vary over time.
     # In the article, we generally use 500 or 750 frames.
-    n_frames = 500
+    n_frames = 60
 
     # on what FRAME to double speed.
     when_to_double_speed = []
@@ -38,7 +38,7 @@ class SeasonsConfig:
     # how many steps per frame we start with. This gets usually doubled many times
     # during the simulation.
     # In the article, we usually use 2 or 4 as the starting value, sometimes 1.
-    steps_per_frame = 2
+    steps_per_frame = 1
 
     ### Evaluation ###
     what_to_evaluate = "extracted"  # @param ["initialization", "extracted"]

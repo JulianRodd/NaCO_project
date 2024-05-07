@@ -3,18 +3,18 @@ import jax.random as jr
 
 class BaselineConfig:
     out_file = "video_seasons_no_doubles.mp4"
-    ec_id = "persistence"       # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
+    ec_id = "pestilence"       # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
     env_width_type = "landscape"   # @param ['wide', 'landscape', 'square', 'petri']
     
     # Set soil_unbalance_limit to 0 to reproduce the original environment. Set it to 1/3 for having self-balancing environments (recommended).
-    soil_unbalance_limit = 0  # @param [0, "1/3"] {type:"raw"}
+    soil_unbalance_limit = 1/3  # @param [0, "1/3"] {type:"raw"}
 
     agent_model = "minimal"  # @param ['minimal', 'extended']
     mutator_type = "basic"  # @param ['basic', 'randomly_adaptive']
     key = jr.PRNGKey(43)
 
     # How many unique programs (organisms) are allowed in the simulation.
-    n_max_programs = 3
+    n_max_programs = 5
 
     # if True, every 50 steps we check whether the agents go extinct. If they did,
     # we replace a seed in the environment.
