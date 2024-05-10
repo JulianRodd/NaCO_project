@@ -10,6 +10,7 @@ from self_organising_systems.biomakerca.mutators import (
     BasicMutator,
     RandomlyAdaptiveMutator,
 )
+import tqdm
 
 # Overriding the default environment logic with a custom one
 import overrides.env_logic_override as env_override
@@ -80,21 +81,22 @@ def run_seasons(env, base_config, env_config, agent_logic, mutator, key, program
     ) as video:
         step = 0
         for year in range(base_config.years):
-            for season_name, season_info in base_config.seasons.items():
-                step, env, programs = perform_simulation(
-                    env,
-                    programs,
-                    base_config,
-                    season_info,
-                    env_config,
-                    agent_logic,
-                    mutator,
-                    key,
-                    video,
-                    frame,
-                    step=step,
-                    season=f"{season_name} {year + 1}",
-                )
+            for season_name, season_periods in tqdm(base_config.seasons.items()):
+                for time_period_info in season_periods:
+                    step, env, programs = perform_simulation(
+                        env,
+                        programs,
+                        base_config,
+                        time_period_info,
+                        env_config,
+                        agent_logic,
+                        mutator,
+                        key,
+                        video,
+                        frame,
+                        step=step,
+                        season=f"{season_name} {year + 1}",
+                    )
 
     return programs, env
 
@@ -116,6 +118,8 @@ def count_agents(env):
 
 def main():
     base_config = SeasonsConfig()
+
+    print(base_config.n_frames)
 
     env, base_config, env_config, agent_logic, mutator, key, programs = make_configs(
         base_config

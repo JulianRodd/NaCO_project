@@ -24,12 +24,6 @@ class SeasonsConfig:
     # we replace a seed in the environment.
     replace_if_extinct = False
 
-    # The number of frames of the video. This is NOT the number of steps.
-    # The total number of steps depend on the number of steps per frame, which can
-    # vary over time.
-    # In the article, we generally use 500 or 750 frames.
-    n_frames = 90
-
     # on what FRAME to double speed.
     when_to_double_speed = []
     # on what FRAME to reset speed.
@@ -51,23 +45,69 @@ class SeasonsConfig:
     eval_key = jr.PRNGKey(123)
     
     seasons = {
-        "Spring": {
-            # From 0 until 0.15, default = 0.1
-            "AIR_DIFFUSION_RATE": 0.07,
-            "SOIL_DIFFUSION_RATE": 0.07,
-        },
-        "Summer": {
-            "AIR_DIFFUSION_RATE": 0.1,
-            "SOIL_DIFFUSION_RATE": 0.1,
-        },
-        "Autumn": {
-            "AIR_DIFFUSION_RATE": 0.04,
-            "SOIL_DIFFUSION_RATE": 0.04,
-        },
-        "Winter": {
-            "AIR_DIFFUSION_RATE": 0.01,
-            "SOIL_DIFFUSION_RATE": 0.01,
-        },
+        "Spring": [
+            {   # March
+                "AIR_DIFFUSION_RATE": 0.07,
+                "SOIL_DIFFUSION_RATE": 0.07,
+            },
+            {   # April
+                "AIR_DIFFUSION_RATE": 0.07,
+                "SOIL_DIFFUSION_RATE": 0.07,
+            },
+            {   # May
+                "AIR_DIFFUSION_RATE": 0.07,
+                "SOIL_DIFFUSION_RATE": 0.07,
+            },
+        ],
+        "Summer": [
+            {   # June
+                "AIR_DIFFUSION_RATE": 0.1,
+                "SOIL_DIFFUSION_RATE": 0.1,
+            },
+            {   # July
+                "AIR_DIFFUSION_RATE": 0.1,
+                "SOIL_DIFFUSION_RATE": 0.1,
+            },
+            {   # August
+                "AIR_DIFFUSION_RATE": 0.1,
+                "SOIL_DIFFUSION_RATE": 0.1,
+            },
+        ],
+        "Autumn": [
+            {   # September
+                "AIR_DIFFUSION_RATE": 0.04,
+                "SOIL_DIFFUSION_RATE": 0.04,
+            },
+            {   # October
+                "AIR_DIFFUSION_RATE": 0.04,
+                "SOIL_DIFFUSION_RATE": 0.04,
+            },
+            {   # November
+                "AIR_DIFFUSION_RATE": 0.04,
+                "SOIL_DIFFUSION_RATE": 0.04,
+            },
+        ],
+        "Winter": [
+            {   # December
+                "AIR_DIFFUSION_RATE": 0.01,
+                "SOIL_DIFFUSION_RATE": 0.01,
+            },
+            {   # January
+                "AIR_DIFFUSION_RATE": 0.01,
+                "SOIL_DIFFUSION_RATE": 0.01,
+            },
+            {   # Februari
+                "AIR_DIFFUSION_RATE": 0.01,
+                "SOIL_DIFFUSION_RATE": 0.01,
+            },
+        ]
     }
 
     years = 2
+
+    # The number of frames of the video. This is NOT the number of steps.
+    # The total number of steps depend on the number of steps per frame, which can
+    # vary over time.
+    # In the article, we generally use 500 or 750 frames.
+    # for our NaCo project, we want each frame to represent a day, so we devide 365 by the number of time periods in a year
+    n_frames = int(365 / sum([len(periods) for periods in seasons.values()]))

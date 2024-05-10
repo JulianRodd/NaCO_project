@@ -67,7 +67,7 @@ def perform_simulation(
     env, programs, base_config, season_info, env_config, agent_logic, mutator, key, video, frame, step=0, season=""
 ):
     video.add_image(frame)
-    for i in tqdm.trange(base_config.n_frames):
+    for i in range(base_config.n_frames):
         if i in base_config.when_to_double_speed:
             base_config.steps_per_frame *= 2
         if i in base_config.when_to_reset_speed:
