@@ -1,3 +1,7 @@
+import random
+import string
+import json
+
 import cv2
 import jax.random as jr
 import mediapy as media
@@ -10,15 +14,17 @@ from self_organising_systems.biomakerca.mutators import (
     BasicMutator,
     RandomlyAdaptiveMutator,
 )
-import tqdm
+from tqdm import tqdm
 
 # Overriding the default environment logic with a custom one
 import overrides.env_logic_override as env_override
+
 env_logic.process_energy = env_override.process_energy
 
 # Overriding the default step maker with a custom one
 import self_organising_systems.biomakerca.step_maker as step_maker
 import overrides.step_maker_override as step_maker_override
+
 step_maker.step_env = step_maker_override.step_env
 
 from biomaker_utils import perform_evaluation, perform_simulation, start_simulation
@@ -32,7 +38,6 @@ def pad_text(img, text):
     color = (0, 0, 0)
     thickness = 1
 
-    # ensure to preserve even size (assumes the input size was even.
     new_h = img.shape[0] // 15
     new_h = new_h if new_h % 2 == 0 else new_h + 1
     img = np.concatenate([np.ones([new_h, img.shape[1], img.shape[2]]), img], 0)
@@ -41,8 +46,22 @@ def pad_text(img, text):
 
 
 def make_configs(base_config: SeasonsConfig):
+    run_id = random.randint(0, 99999999)
+    config_dict = dict(
+        (name, getattr(base_config, name))
+        for name in dir(base_config)
+        if not name.startswith("__")
+    )
+    for key, value in config_dict.items():
+        if "key" in key or isinstance(value, np.ndarray):
+            config_dict[key] = [int(i) if i > 0 else float(i) for i in value]
+
+    with open(f"{base_config.out_file}_config_{run_id}.json", "w") as file:
+        json.dump(config_dict, file, indent=4)
+    base_config.out_file = f"{base_config.out_file}_video_{run_id}.mp4"
+
     env, env_config = evm.get_env_and_config(
-        base_config.ec_id, width_type=base_config.env_width_type
+        base_config.ec_id, width_type=base_config.env_width_type, h=base_config.frame_height
     )
     env_config.soil_unbalance_limit = base_config.soil_unbalance_limit
     env_config.nutrient_cap = base_config.nutrient_cap
@@ -81,8 +100,8 @@ def run_seasons(env, base_config, env_config, agent_logic, mutator, key, program
     ) as video:
         step = 0
         for year in range(base_config.years):
-            for season_name, season_periods in tqdm(base_config.seasons.items()):
-                for time_period_info in season_periods:
+            for season_name, season_periods in base_config.seasons.items():
+                for time_period_info in tqdm(season_periods):
                     step, env, programs = perform_simulation(
                         env,
                         programs,

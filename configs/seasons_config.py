@@ -3,12 +3,14 @@ import numpy as np
 
 
 class SeasonsConfig:
-    out_file = "video_seasons.mp4"
+    out_file = "output/seasons"
     ec_id = "pestilence"  # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
     env_width_type = "landscape"  # @param ['wide', 'landscape', 'square', 'petri']
-    nutrient_cap = np.asarray([20, 20])
-    specialize_cost = np.asarray([0.030, 0.030])
-    max_lifetime = 2000
+    nutrient_cap = np.asarray([25, 25])
+    specialize_cost = np.asarray([0.028, 0.028])
+    max_lifetime = 10000
+
+    frame_height=150
 
     # Set soil_unbalance_limit to 0 to reproduce the original environment. Set it to 1/3 for having self-balancing environments (recommended).
     soil_unbalance_limit = 1 / 3  # @param [0, "1/3"] {type:"raw"}
@@ -18,7 +20,7 @@ class SeasonsConfig:
     key = jr.PRNGKey(43)
 
     # How many unique programs (organisms) are allowed in the simulation.
-    n_max_programs = 10
+    n_max_programs = 15
 
     # if True, every 50 steps we check whether the agents go extinct. If they did,
     # we replace a seed in the environment.
@@ -75,30 +77,30 @@ class SeasonsConfig:
         ],
         "Autumn": [
             {   # September
-                "AIR_DIFFUSION_RATE": 0.04,
-                "SOIL_DIFFUSION_RATE": 0.04,
+                "AIR_DIFFUSION_RATE": 0.07,
+                "SOIL_DIFFUSION_RATE": 0.07,
             },
             {   # October
-                "AIR_DIFFUSION_RATE": 0.04,
-                "SOIL_DIFFUSION_RATE": 0.04,
+                "AIR_DIFFUSION_RATE": 0.06,
+                "SOIL_DIFFUSION_RATE": 0.06,
             },
             {   # November
-                "AIR_DIFFUSION_RATE": 0.04,
-                "SOIL_DIFFUSION_RATE": 0.04,
+                "AIR_DIFFUSION_RATE": 0.05,
+                "SOIL_DIFFUSION_RATE": 0.05,
             },
         ],
         "Winter": [
             {   # December
-                "AIR_DIFFUSION_RATE": 0.01,
-                "SOIL_DIFFUSION_RATE": 0.01,
+                "AIR_DIFFUSION_RATE": 0.03,
+                "SOIL_DIFFUSION_RATE": 0.03,
             },
             {   # January
-                "AIR_DIFFUSION_RATE": 0.01,
-                "SOIL_DIFFUSION_RATE": 0.01,
+                "AIR_DIFFUSION_RATE": 0.03,
+                "SOIL_DIFFUSION_RATE": 0.03,
             },
             {   # Februari
-                "AIR_DIFFUSION_RATE": 0.01,
-                "SOIL_DIFFUSION_RATE": 0.01,
+                "AIR_DIFFUSION_RATE": 0.04,
+                "SOIL_DIFFUSION_RATE": 0.04,
             },
         ]
     }
