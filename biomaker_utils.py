@@ -64,7 +64,7 @@ def start_simulation(env, base_config, env_config):
 
 
 def perform_simulation(
-    env, programs, base_config, env_config, agent_logic, mutator, key, video, frame, step=0, season=""
+    env, programs, base_config, season_info, env_config, agent_logic, mutator, key, video, frame, step=0, season=""
 ):
     video.add_image(frame)
     for i in tqdm.trange(base_config.n_frames):
@@ -84,8 +84,8 @@ def perform_simulation(
                 do_reproduction=True,
                 mutate_programs=True,
                 mutator=mutator,
-                soil_diffusion_rate=base_config.SOIL_DIFFUSION_RATE,
-                air_diffusion_rate=base_config.AIR_DIFFUSION_RATE,
+                soil_diffusion_rate=season_info["SOIL_DIFFUSION_RATE"],
+                air_diffusion_rate=season_info["AIR_DIFFUSION_RATE"],
             )
             if base_config.replace_if_extinct and step % 50 == 0:
                 # check if there is no alive cell.
