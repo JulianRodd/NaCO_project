@@ -1,6 +1,5 @@
-import random
-import string
 import json
+import random
 
 import cv2
 import jax.random as jr
@@ -16,13 +15,16 @@ from self_organising_systems.biomakerca.mutators import (
 )
 from tqdm import tqdm
 
-# Overriding the default environment logic with a custom one
 import overrides.env_logic_override as env_override
+
+# Overriding the default environment logic with a custom one
+from environment_utils import EnvironmentHistory, count_plants
 
 env_logic.process_energy = env_override.process_energy
 
 # Overriding the default step maker with a custom one
 import self_organising_systems.biomakerca.step_maker as step_maker
+
 import overrides.step_maker_override as step_maker_override
 
 step_maker.step_env = step_maker_override.step_env
@@ -61,7 +63,9 @@ def make_configs(base_config: SeasonsConfig):
     base_config.out_file = f"{base_config.out_file}_video_{run_id}.mp4"
 
     env, env_config = evm.get_env_and_config(
-        base_config.ec_id, width_type=base_config.env_width_type, h=base_config.frame_height
+        base_config.ec_id,
+        width_type=base_config.env_width_type,
+        h=base_config.frame_height,
     )
     env_config.soil_unbalance_limit = base_config.soil_unbalance_limit
     env_config.nutrient_cap = base_config.nutrient_cap
@@ -94,6 +98,8 @@ def make_configs(base_config: SeasonsConfig):
 
 
 def run_seasons(env, base_config, env_config, agent_logic, mutator, key, programs):
+    environmentHistory = EnvironmentHistory()
+
     frame = start_simulation(env, base_config, env_config)
     with media.VideoWriter(
         base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18
@@ -102,7 +108,7 @@ def run_seasons(env, base_config, env_config, agent_logic, mutator, key, program
         for year in range(base_config.years):
             for season_name, season_periods in base_config.seasons.items():
                 for time_period_info in tqdm(season_periods):
-                    step, env, programs = perform_simulation(
+                    step, env, programs, env_history = perform_simulation(
                         env,
                         programs,
                         base_config,
@@ -116,23 +122,12 @@ def run_seasons(env, base_config, env_config, agent_logic, mutator, key, program
                         step=step,
                         season=f"{season_name} {year + 1}",
                     )
+                    partOfSeason = season_periods.index(time_period_info) + 1
+                    environmentHistory.add_all(
+                        env_history, f"{season_name} {partOfSeason}"
+                    )
 
-    return programs, env
-
-
-def count_agents(env):
-    agent_types = env.state_grid
-
-    # Count of each type of agent
-    zeros = np.count_nonzero(agent_types == 0)  # unspecialized
-    ones = np.count_nonzero(agent_types == 1)  # root
-    twos = np.count_nonzero(agent_types == 2)  # leaf
-    threes = np.count_nonzero(agent_types == 3)  # flower
-
-    print("Count of unspecialized in grid: ", zeros)
-    print("Count of roots in grid: ", ones)
-    print("Count of leafs in grid: ", twos)
-    print("Count of flowers in grid: ", threes)
+    return programs, env, environmentHistory
 
 
 def main():
@@ -144,10 +139,19 @@ def main():
         base_config
     )
 
-    programs, env = run_seasons(
+    count_plants(env)
+
+    programs, env, environmentHistory = run_seasons(
         env, base_config, env_config, agent_logic, mutator, key, programs
     )
-
+    environmentHistory.plot_agent_type_hist(filter_keys={"Root", "Leaf", "Flower"})
+    environmentHistory.plot_plant_hist()
+    environmentHistory.plot_nutrient_hist(
+        filter_keys={"Air Nutrients", "Soil Nutrients"}
+    )
+    environmentHistory.plot_nutrient_hist(
+        filter_keys={"Root Nutrients", "Leaf Nutrients", "Flower Nutrients"}
+    )
     perform_evaluation(
         env, programs, env, env_config, agent_logic, mutator, base_config
     )

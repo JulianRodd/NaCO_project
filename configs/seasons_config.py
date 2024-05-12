@@ -45,7 +45,7 @@ class SeasonsConfig:
     n_eval_steps = 100
     n_eval_reps = 1
     eval_key = jr.PRNGKey(123)
-    
+
     seasons = {
         "Spring": [
             {   # March
@@ -112,4 +112,4 @@ class SeasonsConfig:
     # vary over time.
     # In the article, we generally use 500 or 750 frames.
     # for our NaCo project, we want each frame to represent a day, so we devide 365 by the number of time periods in a year
-    n_frames = int(365 / sum([len(periods) for periods in seasons.values()]))
+    n_frames = int(60 / sum([len(periods) for periods in seasons.values()]))
