@@ -105,11 +105,12 @@ class SeasonsConfig:
         ]
     }
 
-    years = 2
+    years = 10
 
     # The number of frames of the video. This is NOT the number of steps.
     # The total number of steps depend on the number of steps per frame, which can
     # vary over time.
     # In the article, we generally use 500 or 750 frames.
     # for our NaCo project, we want each frame to represent a day, so we devide 365 by the number of time periods in a year
-    n_frames = int(60 / sum([len(periods) for periods in seasons.values()]))
+    days_in_year = 365
+    n_frames = int(days_in_year / sum([len(periods) for periods in seasons.values()]))

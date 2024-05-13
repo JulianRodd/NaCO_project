@@ -18,7 +18,7 @@ from tqdm import tqdm
 import overrides.env_logic_override as env_override
 
 # Overriding the default environment logic with a custom one
-from environment_utils import EnvironmentHistory, count_plants
+from utils.environment_utils import EnvironmentHistory
 
 env_logic.process_energy = env_override.process_energy
 
@@ -29,8 +29,12 @@ import overrides.step_maker_override as step_maker_override
 
 step_maker.step_env = step_maker_override.step_env
 
-from biomaker_utils import perform_evaluation, perform_simulation, start_simulation
 from configs.seasons_config import SeasonsConfig
+from utils.biomaker_utils import (
+    perform_evaluation,
+    perform_simulation,
+    start_simulation,
+)
 
 
 def pad_text(img, text):
@@ -98,7 +102,7 @@ def make_configs(base_config: SeasonsConfig):
 
 
 def run_seasons(env, base_config, env_config, agent_logic, mutator, key, programs):
-    environmentHistory = EnvironmentHistory()
+    environmentHistory = EnvironmentHistory(base_config)
 
     frame = start_simulation(env, base_config, env_config)
     with media.VideoWriter(
@@ -139,19 +143,53 @@ def main():
         base_config
     )
 
-    count_plants(env)
-
     programs, env, environmentHistory = run_seasons(
         env, base_config, env_config, agent_logic, mutator, key, programs
     )
     environmentHistory.plot_agent_type_hist(filter_keys={"Root", "Leaf", "Flower"})
     environmentHistory.plot_plant_hist()
+    # For nutrient these are the options:
+    # "Air Nutrients in Air": "deepskyblue",
+    # "Soil Nutrients in Soil": "chocolate",
+    # "Air Nutrients in Roots": "darkorange",
+    # "Air Nutrients in Leafs": "lime",
+    # "Air Nutrients in Flowers": "deeppink",
+    # "Soil Nutrients in Roots": "saddlebrown",
+    # "Soil Nutrients in Leafs": "green",
+    # "Soil Nutrients in Flowers": "darkmagenta",
     environmentHistory.plot_nutrient_hist(
-        filter_keys={"Air Nutrients", "Soil Nutrients"}
+        filter_keys={
+            "Air Nutrients in Air",
+            "Soil Nutrients in Soil",
+        }
     )
     environmentHistory.plot_nutrient_hist(
-        filter_keys={"Root Nutrients", "Leaf Nutrients", "Flower Nutrients"}
+        filter_keys={
+            "Air Nutrients in Roots",
+            "Air Nutrients in Leafs",
+            "Air Nutrients in Flowers",
+        }
     )
+    environmentHistory.plot_nutrient_hist(
+        filter_keys={
+            "Soil Nutrients in Roots",
+            "Soil Nutrients in Leafs",
+            "Soil Nutrients in Flowers",
+        }
+    )
+
+    environmentHistory.plot_nutrient_hist(
+        filter_keys={
+            "Air Nutrients in Roots",
+            "Air Nutrients in Leafs",
+            "Air Nutrients in Flowers",
+            "Soil Nutrients in Roots",
+            "Soil Nutrients in Leafs",
+            "Soil Nutrients in Flowers",
+        }
+    )
+
+
     perform_evaluation(
         env, programs, env, env_config, agent_logic, mutator, base_config
     )
