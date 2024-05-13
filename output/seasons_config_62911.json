@@ -1,5 +1,6 @@
 {
     "agent_model": "minimal",
+    "days_in_year": 365,
     "ec_id": "pestilence",
     "env_width_type": "landscape",
     "eval_key": [

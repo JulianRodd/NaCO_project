@@ -35,6 +35,14 @@ MATERIAL_COLORS = {
     "Soil Nutrients in Roots": "saddlebrown",
     "Soil Nutrients in Leafs": "green",
     "Soil Nutrients in Flowers": "darkmagenta",
+    "Root Structural Integrity": "chocolate",
+    "Leaf Structural Integrity": "lime",
+    "Flower Structural Integrity": "deeppink",
+    "Root Age": "chocolate",
+    "Leaf Age": "lime",
+    "Flower Age": "deeppink",
+    "Agent Count": "red",
+    "Average Agent Age": "red",
 }
 
 # grabbed these from environment.py

@@ -1,5 +1,14 @@
+import os
+
 from utils.constants import logger
-from utils.count_utils import count_agent_types, count_nutrients, count_plants
+from utils.count_utils import (
+    average_agent_age,
+    average_agent_structural_integrity,
+    count_agent_types,
+    count_agents,
+    count_nutrients,
+    count_plants,
+)
 from utils.plotting_utils import filter_and_plot_histogram
 
 
@@ -7,10 +16,15 @@ class EnvironmentHistory:
     def __init__(self, base_config):
         self.history = []
         self.seasons = []
+        self.agent_count_hist = None
         if base_config is None:
             logger.error("No base config provided.")
         self.base_config = base_config
-        self.image_dir = f"images/years_{base_config.years}-days_{base_config.days_in_year}"
+        self.image_dir = (
+            f"images/years_{base_config.years}-days_{base_config.days_in_year}"
+        )
+        os.makedirs(self.image_dir, exist_ok=True)
+
     def add(self, environment, season):
         if season is None:
             logger.warning("No season provided for environment.")
@@ -89,26 +103,21 @@ class EnvironmentHistory:
             filter_keys=filter_keys,
         )
 
-    def plot_plant_hist(self, batch_size=30):
+    def plot_plant_hist(self):
+
         if not self.history:
             logger.warning("No history available to plot plant counts.")
             return
 
         plant_hist = []
-        num_environments = len(self.history)
 
-        for i in range(0, num_environments, batch_size):
+        for env in self.history:
+            plant_count = count_plants(env)
 
-            batch_envs = self.history[i : i + batch_size]
-
-            if batch_envs:
-                plant_count = count_plants(batch_envs[0])
-                batch_data = {"Plant Count": plant_count}
-
-                plant_hist.extend([batch_data] * min(batch_size, len(batch_envs)))
+            plant_hist.append({"Plant Count": plant_count})
 
         season_hist = self.seasons[: len(plant_hist)]
-        file_name = f"{self.image_dir}/plant_count_{str(batch_size)}.png"
+        file_name = f"{self.image_dir}/plant_count.png"
         filter_and_plot_histogram(
             plant_hist,
             season_hist,
@@ -119,31 +128,76 @@ class EnvironmentHistory:
             file_name=file_name,
         )
 
-    def plot_agent_count_hist(self, batch_size=1):
+    def plot_agent_count_hist(self):
         if not self.history:
             logger.warning("No history available to plot agent counts.")
             return
 
         agent_hist = []
-        num_environments = len(self.history)
 
-        for i in range(0, num_environments, 1):
-            batch_envs = self.history[i : i + batch_size]
-
-            if batch_envs:
-                plant_count = count_plants(batch_envs[0])
-                batch_data = {"Plant Count": plant_count}
-
-                agent_hist.extend([batch_data] * min(batch_size, len(batch_envs)))
+        for env in self.history:
+            agent_count = count_agents(env)
+            agent_hist.append({"Agent Count": agent_count})
 
         season_hist = self.seasons[: len(agent_hist)]
-        file_name = f"{self.image_dir}/agent_hist_{str(batch_size)}.png"
+        file_name = f"{self.image_dir}/agent_count_hist.png"
         filter_and_plot_histogram(
             agent_hist,
             season_hist,
             title="History of Agent Counts",
             x_label="Time Point",
             y_label="Count",
+            legend_title="",
+            file_name=file_name,
+        )
+
+    def plot_avg_agent_age(self):
+        if not self.history:
+            logger.warning("No history available to plot average agent age.")
+            return
+
+        agent_age_hist = []
+        num_environments = len(self.history)
+
+        for env in self.history:
+            avg_agent_age = average_agent_age(env)
+            agent_age_hist.append({"Average Agent Age": avg_agent_age})
+
+        season_hist = self.seasons[: len(agent_age_hist)]
+        file_name = f"{self.image_dir}/avg_agent_age_hist.png"
+        filter_and_plot_histogram(
+            agent_age_hist,
+            season_hist,
+            title="History of Average Agent Age",
+            x_label="Time Point",
+            y_label="Age",
+            legend_title="",
+            file_name=file_name,
+        )
+
+    def plot_avg_agent_structural_integrity(self):
+        if not self.history:
+            logger.warning(
+                "No history available to plot average agent structural integrity."
+            )
+            return
+
+        agent_structural_integrity_hist = []
+
+        for env in self.history:
+            avg_agent_structural_integrity = average_agent_structural_integrity(env)
+            agent_structural_integrity_hist.append(
+                {"Average Agent SI": avg_agent_structural_integrity}
+            )
+
+        season_hist = self.seasons[: len(agent_structural_integrity_hist)]
+        file_name = f"{self.image_dir}/avg_agent_structural_integrity_hist.png"
+        filter_and_plot_histogram(
+            agent_structural_integrity_hist,
+            season_hist,
+            title="History of Average Agent Structural Integrity",
+            x_label="Time Point",
+            y_label="Structural Integrity",
             legend_title="",
             file_name=file_name,
         )

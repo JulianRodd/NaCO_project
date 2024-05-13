@@ -105,7 +105,7 @@ class SeasonsConfig:
         ]
     }
 
-    years = 10
+    years = 2
 
     # The number of frames of the video. This is NOT the number of steps.
     # The total number of steps depend on the number of steps per frame, which can

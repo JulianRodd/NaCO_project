@@ -4,10 +4,12 @@ import jax.numpy as jp
 import numpy as np
 
 from utils.constants import (
+    AGE_IDX,
     AGENT_TYPE_DEF,
     AIR_NUTRIENT_RPOS,
     EARTH_NUTRIENT_RPOS,
     EN_ST,
+    STR_IDX,
     logger,
 )
 
@@ -15,56 +17,82 @@ from utils.constants import (
 def count_agents(env):
     try:
         agent_id_grid = env.agent_id_grid
-        agent_indices = agent_id_grid.flatten()
-        num_agents = len(np.unique(agent_indices))
+        num_agents = np.count_nonzero(agent_id_grid)
         logger.debug(f"Total number of agents: {num_agents}")
         return num_agents
     except Exception as e:
         logger.error(f"Error counting agents: {e}")
-        return Counter()
+        return 0
+
+
+def average_agent_age(env, num_agents=None):
+    try:
+        agent_age_grid = env.state_grid[:, :, AGE_IDX]
+        if num_agents is None:
+            num_agents = count_agents(env)
+        if num_agents == 0:
+            return 0
+        total_age = agent_age_grid.sum()
+        average_age = total_age / num_agents if num_agents > 0 else 0
+        logger.debug(f"Average agent age: {average_age}")
+        return average_age
+    except Exception as e:
+        logger.error(f"Error calculating average agent age: {e}")
+        return 0
+
+
+def average_agent_structural_integrity(env, num_agents=None):
+    try:
+
+        agent_structural_integrity_grid = env.state_grid[:, :, STR_IDX]
+        if num_agents is None:
+            num_agents = count_agents(env)
+        total_structural_integrity = agent_structural_integrity_grid.sum()
+        average_structural_integrity = (
+            total_structural_integrity / num_agents if num_agents > 0 else 0
+        )
+        logger.debug(
+            f"Average agent structural integrity: {average_structural_integrity}"
+        )
+        return average_structural_integrity
+    except Exception as e:
+        logger.error(f"Error calculating average agent structural_integrity: {e}")
+        return 0
+
+
+def _calculate_nutrient_counts(env, indices, nutrient_col):
+    return env.state_grid[:, :, nutrient_col][indices].sum()
 
 
 def count_nutrients(env, agent_type_def=AGENT_TYPE_DEF):
     try:
-        air_indices = env.type_grid == agent_type_def.types.AIR
-        soil_indices = env.type_grid == agent_type_def.types.EARTH
-        root_indices = env.type_grid[:, :] == agent_type_def.types.AGENT_ROOT
-        leaf_indices = env.type_grid[:, :] == agent_type_def.types.AGENT_LEAF
-        flower_indices = env.type_grid[:, :] == agent_type_def.types.AGENT_FLOWER
+        type_grid = env.type_grid
+        nutrient_counts = {}
+
+        def add_nutrient_count(label, indices, nutrient_col):
+            nutrient_counts[label] = _calculate_nutrient_counts(
+                env, indices, nutrient_col
+            )
+
+        air_indices = type_grid == agent_type_def.types.AIR
+        soil_indices = type_grid == agent_type_def.types.EARTH
+        root_indices = type_grid[:, :] == agent_type_def.types.AGENT_ROOT
+        leaf_indices = type_grid[:, :] == agent_type_def.types.AGENT_LEAF
+        flower_indices = type_grid[:, :] == agent_type_def.types.AGENT_FLOWER
 
         air_nutrient_col = EN_ST + AIR_NUTRIENT_RPOS
         soil_nutrient_col = EN_ST + EARTH_NUTRIENT_RPOS
 
-        air_air_nutrients = env.state_grid[:, :, air_nutrient_col][air_indices].sum()
-
-        soil_soil_nutrients = env.state_grid[:, :, soil_nutrient_col][
-            soil_indices
-        ].sum()
-        root_air_nutrients = env.state_grid[:, :, air_nutrient_col][root_indices].sum()
-        leaf_air_nutrients = env.state_grid[:, :, air_nutrient_col][leaf_indices].sum()
-        flower_air_nutrients = env.state_grid[:, :, air_nutrient_col][
-            flower_indices
-        ].sum()
-        root_soil_nutrients = env.state_grid[:, :, soil_nutrient_col][
-            root_indices
-        ].sum()
-        leaf_soil_nutrients = env.state_grid[:, :, soil_nutrient_col][
-            leaf_indices
-        ].sum()
-        flower_soil_nutrients = env.state_grid[:, :, soil_nutrient_col][
-            flower_indices
-        ].sum()
-
-        nutrient_counts = {
-            "Air Nutrients in Air": air_air_nutrients,
-            "Soil Nutrients in Soil": soil_soil_nutrients,
-            "Air Nutrients in Roots": root_air_nutrients,
-            "Air Nutrients in Leafs": leaf_air_nutrients,
-            "Air Nutrients in Flowers": flower_air_nutrients,
-            "Soil Nutrients in Roots": root_soil_nutrients,
-            "Soil Nutrients in Leafs": leaf_soil_nutrients,
-            "Soil Nutrients in Flowers": flower_soil_nutrients,
-        }
+        add_nutrient_count("Air Nutrients in Air", air_indices, air_nutrient_col)
+        add_nutrient_count("Soil Nutrients in Soil", soil_indices, soil_nutrient_col)
+        add_nutrient_count("Air Nutrients in Roots", root_indices, air_nutrient_col)
+        add_nutrient_count("Air Nutrients in Leafs", leaf_indices, air_nutrient_col)
+        add_nutrient_count("Air Nutrients in Flowers", flower_indices, air_nutrient_col)
+        add_nutrient_count("Soil Nutrients in Roots", root_indices, soil_nutrient_col)
+        add_nutrient_count("Soil Nutrients in Leafs", leaf_indices, soil_nutrient_col)
+        add_nutrient_count(
+            "Soil Nutrients in Flowers", flower_indices, soil_nutrient_col
+        )
 
         logger.debug(f"Nutrient counts: {nutrient_counts}")
         return nutrient_counts
@@ -75,8 +103,7 @@ def count_nutrients(env, agent_type_def=AGENT_TYPE_DEF):
 
 def count_agent_types(env, agent_type_def=AGENT_TYPE_DEF):
     try:
-        flattened_ids = env.type_grid.flatten()
-        flattened_ids = jp.array(flattened_ids, dtype=jp.int32)
+        flattened_ids = jp.array(env.type_grid.flatten(), dtype=jp.int32)
         id_counts = jp.bincount(flattened_ids, length=len(agent_type_def.type_names))
         readable_counts = Counter(
             {
@@ -92,63 +119,13 @@ def count_agent_types(env, agent_type_def=AGENT_TYPE_DEF):
         return Counter()
 
 
-def count_plants(env, agent_type_def=AGENT_TYPE_DEF):
+def count_plants(env):
     try:
-
-        type_grid = env.type_grid
         agent_id_grid = env.agent_id_grid
-
-        plant_types = {
-            agent_type_def.types.AGENT_ROOT,
-            agent_type_def.types.AGENT_LEAF,
-            agent_type_def.types.AGENT_FLOWER,
-        }
-
-        plant_mask = jp.isin(
-            type_grid, jp.array(list(plant_types), dtype=type_grid.dtype)
-        )
-
-        plant_agent_ids = jp.where(
-            plant_mask, agent_id_grid, jp.zeros_like(agent_id_grid)
-        )
-
-        def flood_fill(x, y):
-            if (
-                x < 0
-                or x >= plant_agent_ids.shape[0]
-                or y < 0
-                or y >= plant_agent_ids.shape[1]
-            ):
-                return
-            if not plant_agent_ids[x, y] or visited[x, y]:
-                return
-
-            visited[x, y] = True
-
-            directions = [
-                (-1, 0),
-                (1, 0),
-                (0, -1),
-                (0, 1),
-                (-1, -1),
-                (-1, 1),
-                (1, -1),
-                (1, 1),
-            ]
-            for dx, dy in directions:
-                flood_fill(x + dx, y + dy)
-
-        visited = np.zeros_like(plant_agent_ids, dtype=bool)
-        num_unique_plants = 0
-
-        for i in range(plant_agent_ids.shape[0]):
-            for j in range(plant_agent_ids.shape[1]):
-                if plant_agent_ids[i, j] and not visited[i, j]:
-                    num_unique_plants += 1
-                    flood_fill(i, j)
-
-        logger.debug(f"Total number of plants: {num_unique_plants}")
-        return num_unique_plants
+        agent_id_grid_nonzero = agent_id_grid[agent_id_grid != 0]
+        num_plants = len(np.unique(agent_id_grid_nonzero.flatten()))
+        logger.debug(f"Total number of plants: {num_plants}")
+        return num_plants
     except Exception as e:
         logger.error(f"Error counting plants: {e}")
         return 0

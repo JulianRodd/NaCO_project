@@ -188,11 +188,13 @@ def main():
             "Soil Nutrients in Flowers",
         }
     )
-
-
+    environmentHistory.plot_agent_count_hist()
+    environmentHistory.plot_avg_agent_age()
+    environmentHistory.plot_avg_agent_structural_integrity()
     perform_evaluation(
         env, programs, env, env_config, agent_logic, mutator, base_config
     )
+
 
 
 if __name__ == "__main__":
