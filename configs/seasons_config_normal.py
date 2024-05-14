@@ -4,7 +4,7 @@ import numpy as np
 
 class SeasonsConfig:
     name = "seasons_config"
-    out_file = "output/seasons"
+    out_file = "output/normal_temprature"
     ec_id = "pestilence"  # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
     env_width_type = "landscape"  # @param ['wide', 'landscape', 'square', 'petri']
     nutrient_cap = np.asarray([25, 25])
@@ -48,6 +48,7 @@ class SeasonsConfig:
     eval_key = jr.PRNGKey(123)
 
     seasons = {
+
         "Winter": [
             {  # December
                 "AIR_DIFFUSION_RATE": 0.03,
@@ -62,7 +63,7 @@ class SeasonsConfig:
                 "SOIL_DIFFUSION_RATE": 0.04,
             },
         ],
-        "Spring": [
+                "Spring": [
             {  # March
                 "AIR_DIFFUSION_RATE": 0.07,
                 "SOIL_DIFFUSION_RATE": 0.07,
@@ -106,12 +107,12 @@ class SeasonsConfig:
         ],
     }
 
-    years = 1
+    years = 2
 
     # The number of frames of the video. This is NOT the number of steps.
     # The total number of steps depend on the number of steps per frame, which can
     # vary over time.
     # In the article, we generally use 500 or 750 frames.
     # for our NaCo project, we want each frame to represent a day, so we devide 365 by the number of time periods in a year
-    days_in_year = 60
+    days_in_year = 365
     n_frames = int(days_in_year / sum([len(periods) for periods in seasons.values()]))

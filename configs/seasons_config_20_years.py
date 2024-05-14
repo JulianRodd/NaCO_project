@@ -3,7 +3,7 @@ import numpy as np
 
 
 class SeasonsConfig:
-    name = "seasons_config"
+    name = "seasons_config_20_years"
     out_file = "output/seasons"
     ec_id = "pestilence"  # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
     env_width_type = "landscape"  # @param ['wide', 'landscape', 'square', 'petri']
@@ -106,12 +106,12 @@ class SeasonsConfig:
         ],
     }
 
-    years = 1
+    years = 20
 
     # The number of frames of the video. This is NOT the number of steps.
     # The total number of steps depend on the number of steps per frame, which can
     # vary over time.
-    # In the article, we generally use 500 or 750 frames.
+    # In the article, we generally use 500 or 750 fram2es.
     # for our NaCo project, we want each frame to represent a day, so we devide 365 by the number of time periods in a year
-    days_in_year = 60
+    days_in_year = 365
     n_frames = int(days_in_year / sum([len(periods) for periods in seasons.values()]))

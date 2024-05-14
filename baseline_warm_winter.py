@@ -30,7 +30,7 @@ import overrides.step_maker_override as step_maker_override
 
 step_maker.step_env = step_maker_override.step_env
 
-from configs.seasons_config import SeasonsConfig
+from configs.seasons_config_warm_winter_month import SeasonsConfig
 from utils.biomaker_utils import (
     perform_evaluation,
     perform_simulation,
@@ -166,7 +166,7 @@ def main():
         key,
         programs,
         days_since_start=start_year * days_in_year,
-        folder="test",
+        folder="warm_winter_2_years",
     )
     environmentHistory.plot_agent_type_hist(filter_keys={"Root", "Leaf", "Flower"})
     environmentHistory.plot_plant_hist()

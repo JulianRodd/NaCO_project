@@ -1,9 +1,21 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 from utils.constants import MATERIAL_COLORS, SEASON_COLORS, logger
 
 
-def plot_histogram(data, season_hist, title, x_label, y_label, legend_title, file_name):
+def plot_histogram(
+    data,
+    season_hist,
+    title,
+    x_label,
+    y_label,
+    legend_title,
+    file_name,
+    days_since_start=0,
+    y_axis_lower_limit=None,
+    y_axis_upper_limit=None,
+):
     try:
         fig, ax = plt.subplots(figsize=(10, 6))
         time_points = range(len(season_hist))
@@ -14,11 +26,32 @@ def plot_histogram(data, season_hist, title, x_label, y_label, legend_title, fil
         ax.set_title(title)
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
+
+        if y_axis_lower_limit is not None:
+            ax.set_ylim(bottom=y_axis_lower_limit)
+        if y_axis_upper_limit is not None:
+            ax.set_ylim(top=y_axis_upper_limit)
+        adjust_x_axis_labels(ax, days_since_start)
+
         plt.subplots_adjust(right=0.7)
         plt.savefig(file_name)
         logger.info(f"Saved plot to {file_name}")
     except Exception as e:
         logger.error(f"Error plotting histogram: {e}")
+
+
+def adjust_x_axis_labels(ax, days_since_start):
+    """Adjust the visible x-axis labels to start from a specific day offset."""
+    # Get current x-axis tick labels and positions
+    locs = ax.get_xticks()
+    labels = [int(loc) for loc in locs if loc >= 0 and loc < len(ax.get_lines()[0].get_ydata())]
+
+    # Calculate new labels by adding days_since_start to existing labels
+    new_labels = [label + days_since_start for label in labels]
+
+    # Set only the visible labels modified
+    ax.set_xticks(labels)  # Place ticks only where we have valid data points
+    ax.set_xticklabels(new_labels)  # Update labels to show shifted days
 
 
 def plot_data_lines(ax, data, time_points):
@@ -82,6 +115,9 @@ def filter_and_plot_histogram(
     legend_title,
     file_name,
     filter_keys=None,
+    days_since_start=0,
+    y_axis_lower_limit=None,
+    y_axis_upper_limit=None,
 ):
     if filter_keys is None:
         filter_keys = set(hist_data[0].keys())
@@ -91,4 +127,15 @@ def filter_and_plot_histogram(
         for key in data:
             data[key].append(counter.get(key, 0))
 
-    plot_histogram(data, season_hist, title, x_label, y_label, legend_title, file_name)
+    plot_histogram(
+        data,
+        season_hist,
+        title,
+        x_label,
+        y_label,
+        legend_title,
+        file_name,
+        days_since_start,
+        y_axis_lower_limit,
+        y_axis_upper_limit,
+    )

@@ -7,18 +7,19 @@
         0.0,
         123
     ],
-    "fps": 10,
+    "fps": 30,
     "frame_height": 150,
     "key": [
         0.0,
         43
     ],
-    "max_lifetime": 10000,
+    "max_lifetime": 3650,
     "mutator_type": "basic",
     "n_eval_reps": 1,
     "n_eval_steps": 100,
     "n_frames": 30,
     "n_max_programs": 15,
+    "name": "seasons_config",
     "nutrient_cap": [
         25,
         25
@@ -92,6 +93,6 @@
     "what_to_evaluate": "extracted",
     "when_to_double_speed": [],
     "when_to_reset_speed": [],
-    "years": 2,
+    "years": 5,
     "zoom_sz": 4
 }

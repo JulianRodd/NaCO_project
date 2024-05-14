@@ -19,7 +19,7 @@ import overrides.env_logic_override as env_override
 
 # Overriding the default environment logic with a custom one
 from utils.environment_utils import EnvironmentHistory
-from utils.pickle_utils import load_environment
+from utils.pickle_utils import dump_environment, load_environment
 
 env_logic.process_energy = env_override.process_energy
 
@@ -30,7 +30,7 @@ import overrides.step_maker_override as step_maker_override
 
 step_maker.step_env = step_maker_override.step_env
 
-from configs.seasons_config import SeasonsConfig
+from configs.seasons_config_20_years import SeasonsConfig
 from utils.biomaker_utils import (
     perform_evaluation,
     perform_simulation,
@@ -114,8 +114,6 @@ def run_seasons(
     folder="",
 ):
     environmentHistory = EnvironmentHistory(base_config, days_since_start, folder)
-
-
     frame = start_simulation(env, base_config, env_config)
     with media.VideoWriter(
         base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18
@@ -154,9 +152,7 @@ def main():
     env, base_config, env_config, agent_logic, mutator, key, programs = make_configs(
         base_config
     )
-    start_year = 20
-    days_in_year = 365
-    env = load_environment(start_year, days_in_year)
+
     programs, env, environmentHistory = run_seasons(
         env,
         base_config,
@@ -165,9 +161,10 @@ def main():
         mutator,
         key,
         programs,
-        days_since_start=start_year * days_in_year,
-        folder="test",
+        days_since_start=0,
+        folder="20_year_starting_point",
     )
+    dump_environment(environmentHistory, base_config)
     environmentHistory.plot_agent_type_hist(filter_keys={"Root", "Leaf", "Flower"})
     environmentHistory.plot_plant_hist()
     # For nutrient these are the options:
