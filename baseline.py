@@ -13,7 +13,6 @@ from self_organising_systems.biomakerca.mutators import (
     BasicMutator,
     RandomlyAdaptiveMutator,
 )
-from tqdm import tqdm
 
 import overrides.env_logic_override as env_override
 
@@ -30,7 +29,7 @@ import overrides.step_maker_override as step_maker_override
 
 step_maker.step_env = step_maker_override.step_env
 
-from configs.seasons_config import SeasonsConfig
+from configs.seasons_config import fast_seasons, SeasonsConfig, twenty_year_runup, basic_seasons
 from utils.biomaker_utils import (
     perform_evaluation,
     perform_simulation,
@@ -115,48 +114,43 @@ def run_seasons(
 ):
     environmentHistory = EnvironmentHistory(base_config, days_since_start, folder)
 
-
     frame = start_simulation(env, base_config, env_config)
     with media.VideoWriter(
         base_config.out_file, shape=frame.shape[:2], fps=base_config.fps, crf=18
     ) as video:
         step = 0
         for year in range(base_config.years):
-            for season_name, season_periods in base_config.seasons.items():
-                for time_period_info in tqdm(season_periods):
-                    step, env, programs, env_history = perform_simulation(
-                        env,
-                        programs,
-                        base_config,
-                        time_period_info,
-                        env_config,
-                        agent_logic,
-                        mutator,
-                        key,
-                        video,
-                        frame,
-                        step=step,
-                        season=f"{season_name} {year + 1}",
-                    )
-                    partOfSeason = season_periods.index(time_period_info) + 1
-                    environmentHistory.add_all(
-                        env_history, f"{season_name} {partOfSeason}"
-                    )
+            for month_params in base_config.month_params.items():
+                step, env, programs, env_history = perform_simulation(
+                    env,
+                    programs,
+                    base_config,
+                    month_params[1],
+                    env_config,
+                    agent_logic,
+                    mutator,
+                    key,
+                    video,
+                    frame,
+                    step=step,
+                    season=f"{month_params[0]} {year + 1}",
+                )
+                environmentHistory.add_all(
+                    env_history, month_params[1]['Season'], month_params[0], year
+                )
 
     return programs, env, environmentHistory
 
 
 def main():
-    base_config = SeasonsConfig()
+    base_config = fast_seasons
 
     print(base_config.n_frames)
 
     env, base_config, env_config, agent_logic, mutator, key, programs = make_configs(
-        base_config
+        base_config=basic_seasons
     )
-    start_year = 20
-    days_in_year = 365
-    env = load_environment(start_year, days_in_year)
+
     programs, env, environmentHistory = run_seasons(
         env,
         base_config,
@@ -165,11 +159,11 @@ def main():
         mutator,
         key,
         programs,
-        days_since_start=start_year * days_in_year,
+        days_since_start=0,
         folder="test",
     )
-    environmentHistory.plot_agent_type_hist(filter_keys={"Root", "Leaf", "Flower"})
-    environmentHistory.plot_plant_hist()
+    # environmentHistory.plot_agent_type_hist(filter_keys={"Root", "Leaf", "Flower"})
+    # environmentHistory.plot_plant_hist()
     # For nutrient these are the options:
     # Air Nutrients in Air
     # Soil Nutrients in Soil
@@ -179,43 +173,44 @@ def main():
     # Soil Nutrients in Roots
     # Soil Nutrients in Leafs
     # Soil Nutrients in Flowers
-    environmentHistory.plot_nutrient_hist(
-        filter_keys={
-            "Air Nutrients in Air",
-            "Soil Nutrients in Soil",
-        }
-    )
-    environmentHistory.plot_nutrient_hist(
-        filter_keys={
-            "Air Nutrients in Roots",
-            "Air Nutrients in Leafs",
-            "Air Nutrients in Flowers",
-        }
-    )
-    environmentHistory.plot_nutrient_hist(
-        filter_keys={
-            "Soil Nutrients in Roots",
-            "Soil Nutrients in Leafs",
-            "Soil Nutrients in Flowers",
-        }
-    )
+    # environmentHistory.plot_air_soil_nutrient_hist(
+    #     filter_keys={
+    #         "Air Nutrients in Air",
+    #         "Soil Nutrients in Soil",
+    #     },
+    # )
+    # environmentHistory.plot_nutrient_hist(
+    #     filter_keys={
+    #         "Air Nutrients in Roots",
+    #         "Air Nutrients in Leafs",
+    #         "Air Nutrients in Flowers",
+    #     }
+    # )
+    # environmentHistory.plot_nutrient_hist(
+    #     filter_keys={
+    #         "Soil Nutrients in Roots",
+    #         "Soil Nutrients in Leafs",
+    #         "Soil Nutrients in Flowers",
+    #     }
+    # )
 
-    environmentHistory.plot_nutrient_hist(
-        filter_keys={
-            "Air Nutrients in Roots",
-            "Air Nutrients in Leafs",
-            "Air Nutrients in Flowers",
-            "Soil Nutrients in Roots",
-            "Soil Nutrients in Leafs",
-            "Soil Nutrients in Flowers",
-        }
-    )
-    environmentHistory.plot_agent_count_hist()
-    environmentHistory.plot_avg_agent_age()
-    environmentHistory.plot_avg_agent_structural_integrity()
-    perform_evaluation(
-        env, programs, env, env_config, agent_logic, mutator, base_config
-    )
+    # environmentHistory.plot_nutrient_hist(
+    #     filter_keys={
+    #         "Air Nutrients in Roots",
+    #         "Air Nutrients in Leafs",
+    #         "Air Nutrients in Flowers",
+    #         "Soil Nutrients in Roots",
+    #         "Soil Nutrients in Leafs",
+    #         "Soil Nutrients in Flowers",
+    #     }
+    # )
+    # environmentHistory.plot_agent_count_hist()
+    # environmentHistory.plot_avg_agent_age()
+    # environmentHistory.plot_avg_agent_structural_integrity()
+    environmentHistory.save_results('regular year', 0)
+    # perform_evaluation(
+    #     env, programs, env, env_config, agent_logic, mutator, base_config
+    # )
 
 
 if __name__ == "__main__":

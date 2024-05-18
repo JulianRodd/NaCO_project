@@ -42,7 +42,7 @@ def pad_text(img, text):
 def make_frame(env, step, speed, env_config, zoom_sz, season):
     if season == "":
       padText = "Step {:<7} Speed: {}x".format(step, speed)
-    else: 
+    else:
       padText = "Step {:<7} Speed: {}x   Season: {}".format(step, speed, season)
     return pad_text(
         zoom(evm.grab_image_from_env(env, env_config), zoom_sz),
@@ -64,10 +64,11 @@ def start_simulation(env, base_config, env_config):
 
 
 def perform_simulation(
-    env, programs, base_config, env_config, agent_logic, mutator, key, video, frame, step=0, season=""
+    env, programs, base_config, season_info, env_config, agent_logic, mutator, key, video, frame, step=0, season=""
 ):
-    video.add_image(frame)
-    for i in tqdm.trange(base_config.n_frames):
+    #video.add_image(frame)
+    env_history = [env]
+    for i in range(base_config.n_frames):
         if i in base_config.when_to_double_speed:
             base_config.steps_per_frame *= 2
         if i in base_config.when_to_reset_speed:
@@ -84,9 +85,10 @@ def perform_simulation(
                 do_reproduction=True,
                 mutate_programs=True,
                 mutator=mutator,
-                soil_diffusion_rate=base_config.SOIL_DIFFUSION_RATE,
-                air_diffusion_rate=base_config.AIR_DIFFUSION_RATE,
+                soil_diffusion_rate=season_info["SOIL_DIFFUSION_RATE"],
+                air_diffusion_rate=season_info["AIR_DIFFUSION_RATE"],
             )
+
             if base_config.replace_if_extinct and step % 50 == 0:
                 # check if there is no alive cell.
                 any_alive = jit(lambda type_grid: evm.is_agent_fn(type_grid).sum() > 0)(
@@ -116,21 +118,22 @@ def perform_simulation(
                     )
 
                     # show it, though
-                    frame = make_frame(env, step, base_config.steps_per_frame, season)
-                    for stop_i in range(10):
-                        video.add_image(frame)
+                    # frame = make_frame(env, step, base_config.steps_per_frame, season)
+                    # for stop_i in range(10):
+                    #     video.add_image(frame)
+        env_history.append(env)
 
-        video.add_image(
-            make_frame(
-                env,
-                step,
-                base_config.steps_per_frame,
-                env_config,
-                base_config.zoom_sz,
-                season
-            )
-        )
-    return step, env, programs
+        # video.add_image(
+        #     make_frame(
+        #         env,
+        #         step,
+        #         base_config.steps_per_frame,
+        #         env_config,
+        #         base_config.zoom_sz,
+        #         season
+        #     )
+        # )
+    return step, env, programs, env_history
 
 
 @partial(
@@ -237,21 +240,6 @@ def perform_evaluation(
         b_tot_agents_n.std(),
     )
     print("Extinction events", b_is_extinct, b_is_extinct.mean(), b_is_extinct.std())
-
-    #print("Number of flowers: ", count_flowers(agent_logic, env))# added
-
-    #agentTypes = env.agent_id_grid
-    agentTypes = env.state_grid
-    # Count of each type of agent
-    zeros = np.count_nonzero(agentTypes == 0) # unspecialized
-    ones = np.count_nonzero(agentTypes == 1) # root
-    twos = np.count_nonzero(agentTypes == 2) # leaf
-    threes = np.count_nonzero(agentTypes == 3) # flower
-
-    print("Count of unspecialized in grid: ", zeros)
-    print("Count of roots in grid: ", ones)
-    print("Count of leafs in grid: ", twos)
-    print("Count of flowers in grid: ", threes)
 
 
 def main():

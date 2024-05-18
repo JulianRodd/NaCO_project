@@ -1,5 +1,6 @@
 import os
 
+import wandb
 from utils.constants import logger
 from utils.count_utils import (
     average_agent_age,
@@ -8,49 +9,139 @@ from utils.count_utils import (
     count_agents,
     count_plants,
     nutrient_avgs,
+    nutrient_counts,
 )
 from utils.plotting_utils import filter_and_plot_histogram
 
 
+def month_to_number(month):
+    month = month.lower()
+    month_map = {
+        "january": 0,
+        "february": 1,
+        "march": 2,
+        "april": 3,
+        "may": 4,
+        "june": 5,
+        "july": 6,
+        "august": 7,
+        "september": 8,
+        "october": 9,
+        "november": 10,
+        "december": 11,
+    }
+    return month_map.get(month, -1)
+
+
 class EnvironmentHistory:
-    def __init__(self, base_config, days_since_start=0, folder=""):
+    def __init__(
+        self, base_config, days_since_start=0, folder="", sim=0, use_wandb=False
+    ):
         self.history = []
         self.seasons = []
+        self.months = []
+        self.years = []
         self.days_since_start = days_since_start
-        self.agent_count_hist = None
-        if base_config is None:
-            logger.error("No base config provided.")
         self.base_config = base_config
-        folder = f"/{folder}" if folder else ""
-        self.image_dir = f"images{folder}/years_{base_config.years}-days_{base_config.days_in_year}-start_{days_since_start}"
-        os.makedirs(self.image_dir, exist_ok=True)
+        self.sim = sim
+        self.cache = {}
 
-    def add(self, environment, season):
-        if season is None:
+        if not base_config:
+            logger.error("No base config provided.")
+            return
+
+        folder_path = f"/{folder}" if folder else ""
+        self.image_dir = f"images{folder_path}/years_{base_config.years}-days_{base_config.days_in_year}-start_{days_since_start}"
+        os.makedirs(self.image_dir, exist_ok=True)
+        self.use_wandb = use_wandb
+
+        run_name = f"sim_{sim}_{base_config.name}"
+        self.run = wandb.init(
+            mode="disabled" if not use_wandb else "enabled",
+            project="naco_simulations",
+            name=run_name,
+            config={
+                "days_since_start": days_since_start,
+                "years": base_config.years,
+                "days_in_year": base_config.days_in_year,
+                "folder": folder,
+                "sim": sim,
+            },
+        )
+
+    def _cache_result(self, func, env):
+        key = (func.__name__, id(env))
+        if key not in self.cache:
+            self.cache[key] = func(env)
+        return self.cache[key]
+
+    def add(self, environment, season, month, year):
+        if not season:
             logger.warning("No season provided for environment.")
             return
         if environment:
             self.history.append(environment)
             self.seasons.append(season)
-            logger.info("Environment added to history.")
-            logger.info(f"Current history length: {len(self.history)}")
-            plant_count_last = count_plants(self.history[-1])
-            logger.info(f"Plant count in last environment: {plant_count_last}\n\n")
+            self.months.append(month)
+            self.years.append(year)
+            logger.info(
+                f"Environment added to history. Current history length: {len(self.history)}"
+            )
+            plant_count = self._cache_result(count_plants, self.history[-1])
+            logger.info(f"Plant count in last environment: {plant_count}\n")
+            if self.use_wandb:
+
+                wandb.log(
+                    {
+                        "month": month_to_number(month),
+                        "year": year,
+                        "plant_count": plant_count,
+                        "total_agents": self._cache_result(count_agents, environment),
+                        "average_agent_age": self._cache_result(
+                            average_agent_age, environment
+                        ),
+                        "average_agent_structural_integrity": self._cache_result(
+                            average_agent_structural_integrity, environment
+                        ),
+                        **self._cache_result(nutrient_avgs, environment),
+                    }
+                )
         else:
             logger.warning("Attempted to add an empty environment to history.")
 
-    def add_all(self, environments, season):
-        if season is None:
+    def add_all(self, environments, season, month, year):
+        if not season:
             logger.warning("No season provided for environments.")
             return
         if environments:
             self.history.extend(environments)
             self.seasons.extend([season] * len(environments))
-            logger.info(f"{len(environments)} environments added to history.")
-            logger.info(f"Current history length: {len(self.history)}")
-            plant_count_last = count_plants(self.history[-1])
-            logger.info(f"Plant count in last environment: {plant_count_last}\n\n")
+            self.months.extend([month] * len(environments))
+            self.years.extend([year] * len(environments))
+            logger.info(
+                f"{len(environments)} environments added to history. Current history length: {len(self.history)}"
+            )
+            plant_count = self._cache_result(count_plants, self.history[-1])
+            logger.info(f"Plant count in last environment: {plant_count}\n")
 
+            if self.use_wandb:
+                for env in environments:
+
+                    wandb.log(
+                        {
+                            "month": month_to_number(month),
+                            "year": year,
+                            "plant_count": self._cache_result(count_plants, env),
+                            "total_agents": self._cache_result(count_agents, env),
+                            "average_agent_age": self._cache_result(
+                                average_agent_age, env
+                            ),
+                            "average_agent_structural_integrity": self._cache_result(
+                                average_agent_structural_integrity, env
+                            ),
+                            **self._cache_result(nutrient_avgs, env),
+                        }
+                    )
         else:
             logger.warning("Attempted to add empty environments to history.")
 
@@ -64,261 +155,225 @@ class EnvironmentHistory:
     def get_all(self):
         return self.history
 
-    def plot_agent_type_hist(
-        self, filter_keys=None, y_axis_lower_limit=0, y_axis_upper_limit=500
+    def plot_histogram(
+        self,
+        data,
+        title,
+        x_label,
+        y_label,
+        legend_title,
+        file_name,
+        filter_keys=None,
+        y_axis_limits=None,
     ):
         if not self.history:
-            logger.warning("No history available to plot agent type counts.")
+            logger.warning(f"No history available to plot {title.lower()}.")
             return
-        agent_type_hist = [count_agent_types(env) for env in self.history]
-        season_hist = self.seasons
-        file_name = f"{self.image_dir}/agent_type_hist_{'_'.join(filter_keys) if filter_keys else 'all'}.png".replace(
-            " ", "_"
-        )
+        file_path = f"{self.image_dir}/{file_name}.png".replace(" ", "_")
         filter_and_plot_histogram(
-            agent_type_hist,
-            season_hist,
-            title="History of Agent Type Counts",
-            x_label="Day",
-            y_label="Count",
-            legend_title="Agent Types",
-            file_name=file_name,
-            filter_keys=filter_keys,
-            days_since_start=self.days_since_start,
-            y_axis_lower_limit=y_axis_lower_limit,
-            y_axis_upper_limit=y_axis_upper_limit,
-        )
-
-    def plot_nutrient_hist(
-        self, filter_keys=None, y_axis_lower_limit=0, y_axis_upper_limit=5
-    ):
-        if not self.history:
-            logger.warning("No history available to plot nutrient averages.")
-            return
-
-        nutrient_hist = []
-        num_environments = len(self.history)
-
-        for i in range(num_environments):
-            nutrient_count = nutrient_avgs(self.history[i])
-
-            nutrient_hist.append(nutrient_count)
-
-        file_name = f"{self.image_dir}/nutrient_hist_{'_'.join(filter_keys) if filter_keys else 'all'}.png".replace(
-            " ", "_"
-        )
-        filter_and_plot_histogram(
-            nutrient_hist,
+            data,
             self.seasons,
-            title="History of Average Nutrient Counts Per Agent",
-            x_label="Day",
-            y_label="Average Nutrient Count",
-            legend_title="Nutrients",
-            file_name=file_name,
+            title=title,
+            x_label=x_label,
+            y_label=y_label,
+            legend_title=legend_title,
+            file_name=file_path,
             filter_keys=filter_keys,
             days_since_start=self.days_since_start,
-            y_axis_lower_limit=y_axis_lower_limit,
-            y_axis_upper_limit=y_axis_upper_limit,
+            y_axis_lower_limit=y_axis_limits[0] if y_axis_limits else None,
+            y_axis_upper_limit=y_axis_limits[1] if y_axis_limits else None,
+        )
+
+    def plot_agent_type_hist(self, filter_keys=None, y_axis_limits=(0, 500)):
+        agent_type_hist = [
+            self._cache_result(count_agent_types, env) for env in self.history
+        ]
+        self.plot_histogram(
+            agent_type_hist,
+            "History of Agent Type Counts",
+            "Day",
+            "Count",
+            "Agent Types",
+            "agent_type_hist",
+            filter_keys,
+            y_axis_limits,
+        )
+
+    def plot_air_soil_nutrient_hist(self, filter_keys=None):
+        nutrient_hist = [
+            self._cache_result(nutrient_counts, env) for env in self.history
+        ]
+        self.plot_histogram(
+            nutrient_hist,
+            "History of Nutrient Counts of Soil and Air",
+            "Day",
+            "Nutrient Count",
+            "Nutrients",
+            "nutrient_hist_air_soil",
+            filter_keys,
+        )
+
+    def plot_nutrient_hist(self, filter_keys=None, y_axis_limits=(0, 5)):
+        nutrient_hist = [self._cache_result(nutrient_avgs, env) for env in self.history]
+        self.plot_histogram(
+            nutrient_hist,
+            "History of Average Nutrient Counts Per Agent",
+            "Day",
+            "Average Nutrient Count",
+            "Nutrients",
+            "nutrient_hist",
+            filter_keys,
+            y_axis_limits,
         )
 
     def plot_plant_hist(self):
-
-        if not self.history:
-            logger.warning("No history available to plot plant counts.")
-            return
-
-        plant_hist = []
-
-        for env in self.history:
-            plant_count = count_plants(env)
-
-            plant_hist.append({"Plant Count": plant_count})
-
-        season_hist = self.seasons[: len(plant_hist)]
-        file_name = f"{self.image_dir}/plant_count.png"
-        filter_and_plot_histogram(
-            plant_hist,
-            season_hist,
-            title="History of Plant Counts",
-            x_label="Day",
-            y_label="Count",
-            legend_title="",
-            file_name=file_name,
-            days_since_start=self.days_since_start,
+        plant_hist = [
+            {"Plant Count": self._cache_result(count_plants, env)}
+            for env in self.history
+        ]
+        self.plot_histogram(
+            plant_hist, "History of Plant Counts", "Day", "Count", "", "plant_count"
         )
 
-    def plot_agent_count_hist(self, y_axis_lower_limit=200, y_axis_upper_limit=1000):
-        if not self.history:
-            logger.warning("No history available to plot agent counts.")
-            return
-
-        agent_hist = []
-
-        for env in self.history:
-            agent_count = count_agents(env)
-            agent_hist.append({"Agent Count": agent_count})
-
-        season_hist = self.seasons[: len(agent_hist)]
-        file_name = f"{self.image_dir}/agent_count_hist.png"
-        filter_and_plot_histogram(
+    def plot_agent_count_hist(self, y_axis_limits=(200, 1000)):
+        agent_hist = [
+            {"Agent Count": self._cache_result(count_agents, env)}
+            for env in self.history
+        ]
+        self.plot_histogram(
             agent_hist,
-            season_hist,
-            title="History of Agent Counts",
-            x_label="Day",
-            y_label="Count",
-            legend_title="",
-            file_name=file_name,
-            days_since_start=self.days_since_start,
-            y_axis_lower_limit=y_axis_lower_limit,
-            y_axis_upper_limit=y_axis_upper_limit,
+            "History of Agent Counts",
+            "Day",
+            "Count",
+            "",
+            "agent_count_hist",
+            y_axis_limits=y_axis_limits,
         )
 
     def plot_avg_agent_age(self):
-        if not self.history:
-            logger.warning("No history available to plot average agent age.")
-            return
-
-        agent_age_hist = []
-        num_environments = len(self.history)
-
-        for env in self.history:
-            avg_agent_age = average_agent_age(env)
-            agent_age_hist.append({"Average Agent Age": avg_agent_age})
-
-        season_hist = self.seasons[: len(agent_age_hist)]
-        file_name = f"{self.image_dir}/avg_agent_age_hist.png"
-        filter_and_plot_histogram(
+        agent_age_hist = [
+            {"Average Agent Age": self._cache_result(average_agent_age, env)}
+            for env in self.history
+        ]
+        self.plot_histogram(
             agent_age_hist,
-            season_hist,
-            title="History of Average Agent Age",
-            x_label="Day",
-            y_label="Age",
-            legend_title="",
-            file_name=file_name,
-            days_since_start=self.days_since_start,
+            "History of Average Agent Age",
+            "Day",
+            "Age",
+            "",
+            "avg_agent_age_hist",
         )
 
     def plot_avg_agent_structural_integrity(self):
-        if not self.history:
-            logger.warning(
-                "No history available to plot average agent structural integrity."
-            )
-            return
-
-        agent_structural_integrity_hist = []
-
-        for env in self.history:
-            avg_agent_structural_integrity = average_agent_structural_integrity(env)
-            agent_structural_integrity_hist.append(
-                {"Average Agent SI": avg_agent_structural_integrity}
-            )
-
-        season_hist = self.seasons[: len(agent_structural_integrity_hist)]
-        file_name = f"{self.image_dir}/avg_agent_structural_integrity_hist.png"
-        filter_and_plot_histogram(
-            agent_structural_integrity_hist,
-            season_hist,
-            title="History of Average Agent Structural Integrity",
-            x_label="Day",
-            y_label="Structural Integrity",
-            legend_title="",
-            file_name=file_name,
-            days_since_start=self.days_since_start,
+        agent_integrity_hist = [
+            {
+                "Average Agent SI": self._cache_result(
+                    average_agent_structural_integrity, env
+                )
+            }
+            for env in self.history
+        ]
+        self.plot_histogram(
+            agent_integrity_hist,
+            "History of Average Agent Structural Integrity",
+            "Day",
+            "Structural Integrity",
+            "",
+            "avg_agent_structural_integrity_hist",
         )
 
-    def save_results(self, result_number=0):
-        nutrient_per_agent_dict = {
-            "january": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "february": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "march": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "april": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "may": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "june": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "july": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "august": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "october": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "november": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
-            "december": {
-                "avg air nutrients in leaf agent": 0,
-                "avg air nutrients in root agent": 0,
-                "avg air nutrients in flower agent": 0,
-                "avg soil nutrients in leaf agent": 0,
-                "avg soil nutrients in root agent": 0,
-                "avg soil nutrients in flower agent": 0,
-            },
+    def save_results(self, result_type: str, result_number=0):
+        if self.use_wandb:
+            self.run.finish()
+        result_type = result_type.lower().replace(" ", "_")
+        nutrient_avg_per_agent = {
+            month: {
+                nutrient: 0
+                for nutrient in [
+                    "Avg Air Nutrients in Leafs",
+                    "Avg Air Nutrients in Roots",
+                    "Avg Air Nutrients in Flowers",
+                    "Avg Soil Nutrients in Leafs",
+                    "Avg Soil Nutrients in Roots",
+                    "Avg Soil Nutrients in Flowers",
+                ]
+            }
+            for month in self.months
         }
+        agent_type_count_per_month = {
+            month: {
+                "leaf agent count": 0,
+                "root agent count": 0,
+                "flower agent count": 0,
+            }
+            for month in self.months
+        }
+        total_agent_count_per_month = {month: 0 for month in self.months}
+        avg_agent_age_per_month = {month: 0 for month in self.months}
+        avg_structural_integrity_per_month = {month: 0 for month in self.months}
+        month_occurrences = {month: 0 for month in self.months}
 
-    nutrient
+        for i, env in enumerate(self.history):
+            month = self.months[i].lower()
+            month_occurrences[month] += 1
+
+            nutrient_counts = self._cache_result(nutrient_avgs, env)
+            agent_type_counts = self._cache_result(count_agent_types, env)
+            total_agent_count = self._cache_result(count_agents, env)
+
+            for nutrient, count in nutrient_counts.items():
+                nutrient_avg_per_agent[month][nutrient] += count
+
+            for agent_type, count in agent_type_counts.items():
+                agent_key = f"{agent_type.lower()} agent count"
+                agent_type_count_per_month[month][agent_key] += count
+
+            avg_agent_age_per_month[month] += self._cache_result(average_agent_age, env)
+            avg_structural_integrity_per_month[month] += self._cache_result(
+                average_agent_structural_integrity, env
+            )
+            total_agent_count_per_month[month] += total_agent_count
+
+        for month in nutrient_avg_per_agent:
+            for nutrient in nutrient_avg_per_agent[month]:
+                nutrient_avg_per_agent[month][nutrient] /= month_occurrences[month]
+
+            for agent in agent_type_count_per_month[month]:
+                agent_type_count_per_month[month][agent] /= month_occurrences[month]
+
+            total_agent_count_per_month[month] /= month_occurrences[month]
+            avg_agent_age_per_month[month] /= month_occurrences[month]
+            avg_structural_integrity_per_month[month] /= month_occurrences[month]
+
+        os.makedirs(f"analysis_results/nutrients/{result_type}", exist_ok=True)
+        os.makedirs(f"analysis_results/general/{result_type}", exist_ok=True)
+
+        with open(
+            f"analysis_results/nutrients/{result_type}/sim_{result_number}.csv", "w"
+        ) as result_file:
+            result_file.write(
+                "Season,Agent Type,Agent Type Count, Avg Air Nutrients, Avg Soil Nutrients\n"
+            )
+            for month, nutrient_data in nutrient_avg_per_agent.items():
+                for agent, count in agent_type_count_per_month[month].items():
+                    air_nutrient = nutrient_data[
+                        f"Avg Air Nutrients in {agent.split()[0].title()}"
+                    ]
+                    soil_nutrient = nutrient_data[
+                        f"Avg Soil Nutrients in {agent.split()[0].title()}"
+                    ]
+                    result_file.write(
+                        f"{month},{agent},{int(count)},{air_nutrient},{soil_nutrient}\n"
+                    )
+
+        with open(
+            f"analysis_results/general/{result_type}/sim_{result_number}.csv", "w"
+        ) as result_file:
+            result_file.write("Season,Total in Month, Avg Agent Age, Avg Agent SI\n")
+            for month in nutrient_avg_per_agent:
+                result_file.write(
+                    f"{month}, {int(total_agent_count_per_month[month])},{avg_agent_age_per_month[month]},{avg_structural_integrity_per_month[month]}\n"
+                )
 
     def __len__(self):
         return len(self.history)

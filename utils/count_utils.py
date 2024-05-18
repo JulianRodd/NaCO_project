@@ -52,7 +52,7 @@ def average_agent_structural_integrity(env, num_agents=None):
             total_structural_integrity / num_agents if num_agents > 0 else 0
         )
         logger.debug(
-            f"Average agent structural integrity: {average_structural_integrity}"
+            f"Avg agent structural integrity: {average_structural_integrity}"
         )
         return average_structural_integrity
     except Exception as e:
@@ -63,6 +63,31 @@ def average_agent_structural_integrity(env, num_agents=None):
 def _calculate_nutrient_counts(env, indices, nutrient_col):
     return env.state_grid[:, :, nutrient_col][indices].sum()
 
+
+def nutrient_counts(env, agent_type_def=AGENT_TYPE_DEF):
+    try:
+        type_grid = env.type_grid
+        nutrient_avgs = {}
+
+        count_agents_of_type = lambda agent_type: np.count_nonzero(
+            type_grid == agent_type
+        )
+
+        soil_indicies = type_grid[:, :] == agent_type_def.types.EARTH
+        air_indices = type_grid[:, :] == agent_type_def.types.AIR
+
+
+        air_nutrient_col = EN_ST + AIR_NUTRIENT_RPOS
+        soil_nutrient_col = EN_ST + EARTH_NUTRIENT_RPOS
+
+        nutrient_avgs["Air Nutrients in Air"] = _calculate_nutrient_counts(env, air_indices, air_nutrient_col)
+        nutrient_avgs["Soil Nutrients in Soil"] = _calculate_nutrient_counts(env, soil_indicies, soil_nutrient_col)
+
+
+        return nutrient_avgs
+    except Exception as e:
+        logger.error(f"Error finding averages nutrients: {e}")
+        return {}
 
 def nutrient_avgs(env, agent_type_def=AGENT_TYPE_DEF):
     try:
@@ -90,22 +115,22 @@ def nutrient_avgs(env, agent_type_def=AGENT_TYPE_DEF):
         soil_nutrient_col = EN_ST + EARTH_NUTRIENT_RPOS
 
         add_nutrient_avg(
-            "Air Nutrients in Roots", root_indices, air_nutrient_col, root_count
+            "Avg Air Nutrients in Roots", root_indices, air_nutrient_col, root_count
         )
         add_nutrient_avg(
-            "Air Nutrients in Leafs", leaf_indices, air_nutrient_col, leaf_count
+            "Avg Air Nutrients in Leafs", leaf_indices, air_nutrient_col, leaf_count
         )
         add_nutrient_avg(
-            "Air Nutrients in Flowers", flower_indices, air_nutrient_col, flower_count
+            "Avg Air Nutrients in Flowers", flower_indices, air_nutrient_col, flower_count
         )
         add_nutrient_avg(
-            "Soil Nutrients in Roots", root_indices, soil_nutrient_col, root_count
+            "Avg Soil Nutrients in Roots", root_indices, soil_nutrient_col, root_count
         )
         add_nutrient_avg(
-            "Soil Nutrients in Leafs", leaf_indices, soil_nutrient_col, leaf_count
+            "Avg Soil Nutrients in Leafs", leaf_indices, soil_nutrient_col, leaf_count
         )
         add_nutrient_avg(
-            "Soil Nutrients in Flowers", flower_indices, soil_nutrient_col, flower_count
+            "Avg Soil Nutrients in Flowers", flower_indices, soil_nutrient_col, flower_count
         )
 
         logger.debug(f"Nutrient averages: {nutrient_avgs}")
