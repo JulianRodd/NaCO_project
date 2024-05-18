@@ -11,26 +11,8 @@ from utils.count_utils import (
     nutrient_avgs,
     nutrient_counts,
 )
+from utils.general_utils import month_to_number
 from utils.plotting_utils import filter_and_plot_histogram
-
-
-def month_to_number(month):
-    month = month.lower()
-    month_map = {
-        "january": 0,
-        "february": 1,
-        "march": 2,
-        "april": 3,
-        "may": 4,
-        "june": 5,
-        "july": 6,
-        "august": 7,
-        "september": 8,
-        "october": 9,
-        "november": 10,
-        "december": 11,
-    }
-    return month_map.get(month, -1)
 
 
 class EnvironmentHistory:
@@ -57,9 +39,12 @@ class EnvironmentHistory:
 
         run_name = f"sim_{sim}_{base_config.name}"
         self.run = wandb.init(
-            mode="disabled" if not use_wandb else "enabled",
+            mode="disabled" if not use_wandb else "online",
             project="naco_simulations",
+            settings=wandb.Settings(start_method="fork"),
             name=run_name,
+            group=base_config.name,
+            tags=[base_config.name, str(sim)],
             config={
                 "days_since_start": days_since_start,
                 "years": base_config.years,
@@ -89,23 +74,23 @@ class EnvironmentHistory:
             )
             plant_count = self._cache_result(count_plants, self.history[-1])
             logger.info(f"Plant count in last environment: {plant_count}\n")
-            if self.use_wandb:
 
-                wandb.log(
-                    {
-                        "month": month_to_number(month),
-                        "year": year,
-                        "plant_count": plant_count,
-                        "total_agents": self._cache_result(count_agents, environment),
-                        "average_agent_age": self._cache_result(
-                            average_agent_age, environment
-                        ),
-                        "average_agent_structural_integrity": self._cache_result(
-                            average_agent_structural_integrity, environment
-                        ),
-                        **self._cache_result(nutrient_avgs, environment),
-                    }
-                )
+            wandb.log(
+                {
+                    "month": month_to_number(month),
+                    "year": year + 1,
+                    "plant_count": plant_count,
+                    "total_agents": self._cache_result(count_agents, environment),
+                    "average_agent_age": self._cache_result(
+                        average_agent_age, environment
+                    ),
+                    "average_agent_structural_integrity": self._cache_result(
+                        average_agent_structural_integrity, environment
+                    ),
+                    **self._cache_result(nutrient_avgs, environment),
+                    **self._cache_result(nutrient_counts, environment),
+                }
+            )
         else:
             logger.warning("Attempted to add an empty environment to history.")
 
@@ -124,24 +109,22 @@ class EnvironmentHistory:
             plant_count = self._cache_result(count_plants, self.history[-1])
             logger.info(f"Plant count in last environment: {plant_count}\n")
 
-            if self.use_wandb:
-                for env in environments:
+            for env in environments:
 
-                    wandb.log(
-                        {
-                            "month": month_to_number(month),
-                            "year": year,
-                            "plant_count": self._cache_result(count_plants, env),
-                            "total_agents": self._cache_result(count_agents, env),
-                            "average_agent_age": self._cache_result(
-                                average_agent_age, env
-                            ),
-                            "average_agent_structural_integrity": self._cache_result(
-                                average_agent_structural_integrity, env
-                            ),
-                            **self._cache_result(nutrient_avgs, env),
-                        }
-                    )
+                wandb.log(
+                    {
+                        "month": month_to_number(month),
+                        "year": year + 1,
+                        "plant_count": self._cache_result(count_plants, env),
+                        "total_agents": self._cache_result(count_agents, env),
+                        "average_agent_age": self._cache_result(average_agent_age, env),
+                        "average_agent_structural_integrity": self._cache_result(
+                            average_agent_structural_integrity, env
+                        ),
+                        **self._cache_result(nutrient_avgs, env),
+                        **self._cache_result(nutrient_counts, env),
+                    }
+                )
         else:
             logger.warning("Attempted to add empty environments to history.")
 
@@ -282,9 +265,12 @@ class EnvironmentHistory:
             "avg_agent_structural_integrity_hist",
         )
 
+    def return_agent_count_of_last_env(self):
+        return self._cache_result(count_agents, self.history[-1])
+
     def save_results(self, result_type: str, result_number=0):
-        if self.use_wandb:
-            self.run.finish()
+        self.finish()
+        self.months = [ month.lower() for month in self.months]
         result_type = result_type.lower().replace(" ", "_")
         nutrient_avg_per_agent = {
             month: {
@@ -311,7 +297,20 @@ class EnvironmentHistory:
         total_agent_count_per_month = {month: 0 for month in self.months}
         avg_agent_age_per_month = {month: 0 for month in self.months}
         avg_structural_integrity_per_month = {month: 0 for month in self.months}
-        month_occurrences = {month: 0 for month in self.months}
+        month_occurrences = {
+            "january": 0,
+            "february": 0,
+            "march": 0,
+            "april": 0,
+            "may": 0,
+            "june": 0,
+            "july": 0,
+            "august": 0,
+            "september": 0,
+            "october": 0,
+            "november": 0,
+            "december": 0,
+        }
 
         for i, env in enumerate(self.history):
             month = self.months[i].lower()
@@ -325,8 +324,9 @@ class EnvironmentHistory:
                 nutrient_avg_per_agent[month][nutrient] += count
 
             for agent_type, count in agent_type_counts.items():
-                agent_key = f"{agent_type.lower()} agent count"
-                agent_type_count_per_month[month][agent_key] += count
+                if agent_type.lower() in ["leaf", "root", "flower"]:
+                    agent_key = f"{agent_type.lower()} agent count"
+                    agent_type_count_per_month[month][agent_key] += count
 
             avg_agent_age_per_month[month] += self._cache_result(average_agent_age, env)
             avg_structural_integrity_per_month[month] += self._cache_result(
@@ -357,10 +357,10 @@ class EnvironmentHistory:
             for month, nutrient_data in nutrient_avg_per_agent.items():
                 for agent, count in agent_type_count_per_month[month].items():
                     air_nutrient = nutrient_data[
-                        f"Avg Air Nutrients in {agent.split()[0].title()}"
+                        f"Avg Air Nutrients in {agent.split()[0].title()}s"
                     ]
                     soil_nutrient = nutrient_data[
-                        f"Avg Soil Nutrients in {agent.split()[0].title()}"
+                        f"Avg Soil Nutrients in {agent.split()[0].title()}s"
                     ]
                     result_file.write(
                         f"{month},{agent},{int(count)},{air_nutrient},{soil_nutrient}\n"
@@ -380,3 +380,10 @@ class EnvironmentHistory:
 
     def __iter__(self):
         return iter(self.history)
+
+    def finish(self):
+        if self.use_wandb and self.run:
+            self.run.finish()
+
+    def __del__(self):
+        self.finish()

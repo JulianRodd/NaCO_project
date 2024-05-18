@@ -3,7 +3,86 @@ import numpy as np
 
 
 class SeasonsConfig:
-    name = "seasons_config"
+    def __init__(self, name, years, days_in_year, january_air_diffusion_rate=0.03, slight_alteration = False, simulation = 0):
+        self.name = name
+        self.years = years
+        self.days_in_year = days_in_year
+        self.january_air_diffusion_rate = january_air_diffusion_rate
+        self.simulation = simulation
+        self.key = jr.PRNGKey(simulation)
+        self.month_params = {
+            "January": {
+                "Season": "Winter",
+                "AIR_DIFFUSION_RATE": self.january_air_diffusion_rate,
+                "SOIL_DIFFUSION_RATE": 0.03,
+            },
+            "February": {
+                "Season": "Winter",
+                "AIR_DIFFUSION_RATE": 0.04,
+                "SOIL_DIFFUSION_RATE": 0.04,
+            },
+            "March": {
+                "Season": "Spring",
+                "AIR_DIFFUSION_RATE": 0.07,
+                "SOIL_DIFFUSION_RATE": 0.07,
+            },
+            "April": {
+                "Season": "Spring",
+                "AIR_DIFFUSION_RATE": 0.075,
+                "SOIL_DIFFUSION_RATE": 0.075,
+            },
+            "May": {
+                "Season": "Spring",
+                "AIR_DIFFUSION_RATE": 0.08,
+                "SOIL_DIFFUSION_RATE": 0.08,
+            },
+            "June": {
+                "Season": "Summer",
+                "AIR_DIFFUSION_RATE": 0.1,
+                "SOIL_DIFFUSION_RATE": 0.1,
+            },
+            "July": {
+                "Season": "Summer",
+                "AIR_DIFFUSION_RATE": 0.11,
+                "SOIL_DIFFUSION_RATE": 0.11,
+            },
+            "August": {
+                "Season": "Summer",
+                "AIR_DIFFUSION_RATE": 0.1,
+                "SOIL_DIFFUSION_RATE": 0.1,
+            },
+            "September": {
+                "Season": "Autumn",
+                "AIR_DIFFUSION_RATE": 0.09,
+                "SOIL_DIFFUSION_RATE": 0.09,
+            },
+            "October": {
+                "Season": "Autumn",
+                "AIR_DIFFUSION_RATE": 0.07,
+                "SOIL_DIFFUSION_RATE": 0.07,
+            },
+            "November": {
+                "Season": "Autumn",
+                "AIR_DIFFUSION_RATE": 0.05,
+                "SOIL_DIFFUSION_RATE": 0.05,
+            },
+            "December": {
+                "Season": "Winter",
+                "AIR_DIFFUSION_RATE": 0.035,
+                "SOIL_DIFFUSION_RATE": 0.035,
+            },
+        }
+        if slight_alteration:
+            # each months air and soil diffusion rate is slightly altered by multiplying by a random number between 0.9 and 1.1
+            # normal distribution with mean 1 and std 0.05
+            for month in self.month_params:
+                self.month_params[month]["AIR_DIFFUSION_RATE"] *= np.random.normal(1, 0.05)
+                self.month_params[month]["SOIL_DIFFUSION_RATE"] *= np.random.normal(1, 0.05)
+        self.n_frames = int(
+            self.days_in_year
+            / len(self.month_params)
+        )
+
     out_file = "output/seasons"
     ec_id = "pestilence"  # @param ['persistence', 'pestilence', 'collaboration', 'sideways']
     env_width_type = "landscape"  # @param ['wide', 'landscape', 'square', 'petri']
@@ -18,7 +97,7 @@ class SeasonsConfig:
 
     agent_model = "minimal"  # @param ['minimal', 'extended']
     mutator_type = "basic"  # @param ['basic', 'randomly_adaptive']
-    key = jr.PRNGKey(43)
+
 
     # How many unique programs (organisms) are allowed in the simulation.
     n_max_programs = 25
@@ -47,71 +126,4 @@ class SeasonsConfig:
     n_eval_reps = 1
     eval_key = jr.PRNGKey(123)
 
-    seasons = {
-        "Winter": [
-            {  # December
-                "AIR_DIFFUSION_RATE": 0.03,
-                "SOIL_DIFFUSION_RATE": 0.03,
-            },
-            {  # January
-                "AIR_DIFFUSION_RATE": 0.03,
-                "SOIL_DIFFUSION_RATE": 0.03,
-            },
-            {  # Februari
-                "AIR_DIFFUSION_RATE": 0.04,
-                "SOIL_DIFFUSION_RATE": 0.04,
-            },
-        ],
-        "Spring": [
-            {  # March
-                "AIR_DIFFUSION_RATE": 0.07,
-                "SOIL_DIFFUSION_RATE": 0.07,
-            },
-            {  # April
-                "AIR_DIFFUSION_RATE": 0.07,
-                "SOIL_DIFFUSION_RATE": 0.07,
-            },
-            {  # May
-                "AIR_DIFFUSION_RATE": 0.07,
-                "SOIL_DIFFUSION_RATE": 0.07,
-            },
-        ],
-        "Summer": [
-            {  # June
-                "AIR_DIFFUSION_RATE": 0.1,
-                "SOIL_DIFFUSION_RATE": 0.1,
-            },
-            {  # July
-                "AIR_DIFFUSION_RATE": 0.1,
-                "SOIL_DIFFUSION_RATE": 0.1,
-            },
-            {  # August
-                "AIR_DIFFUSION_RATE": 0.1,
-                "SOIL_DIFFUSION_RATE": 0.1,
-            },
-        ],
-        "Autumn": [
-            {  # September
-                "AIR_DIFFUSION_RATE": 0.07,
-                "SOIL_DIFFUSION_RATE": 0.07,
-            },
-            {  # October
-                "AIR_DIFFUSION_RATE": 0.06,
-                "SOIL_DIFFUSION_RATE": 0.06,
-            },
-            {  # November
-                "AIR_DIFFUSION_RATE": 0.05,
-                "SOIL_DIFFUSION_RATE": 0.05,
-            },
-        ],
-    }
 
-    years = 1
-
-    # The number of frames of the video. This is NOT the number of steps.
-    # The total number of steps depend on the number of steps per frame, which can
-    # vary over time.
-    # In the article, we generally use 500 or 750 frames.
-    # for our NaCo project, we want each frame to represent a day, so we devide 365 by the number of time periods in a year
-    days_in_year = 60
-    n_frames = int(days_in_year / sum([len(periods) for periods in seasons.values()]))
