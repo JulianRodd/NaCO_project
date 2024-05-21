@@ -29,7 +29,7 @@ step_maker.step_env = step_maker_override.step_env
 from configs.seasons_config import SeasonsConfig
 from utils.biomaker_util_no_video import perform_simulation
 
-USE_WANDB = True
+USE_WANDB = False
 TEXT_FONT = cv2.FONT_HERSHEY_SIMPLEX
 TEXT_ORIGIN = (5, 15)
 TEXT_FONT_SCALE = 0.5

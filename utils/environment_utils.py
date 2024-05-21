@@ -270,7 +270,7 @@ class EnvironmentHistory:
 
     def save_results(self, result_type: str, result_number=0):
         self.finish()
-        self.months = [ month.lower() for month in self.months]
+        self.months = [month.lower() for month in self.months]
         result_type = result_type.lower().replace(" ", "_")
         nutrient_avg_per_agent = {
             month: {
@@ -279,9 +279,11 @@ class EnvironmentHistory:
                     "Avg Air Nutrients in Leafs",
                     "Avg Air Nutrients in Roots",
                     "Avg Air Nutrients in Flowers",
+                    "Avg Air Nutrients in Unspecializeds",
                     "Avg Soil Nutrients in Leafs",
                     "Avg Soil Nutrients in Roots",
                     "Avg Soil Nutrients in Flowers",
+                    "Avg Soil Nutrients in Unspecializeds",
                 ]
             }
             for month in self.months
@@ -291,6 +293,7 @@ class EnvironmentHistory:
                 "leaf agent count": 0,
                 "root agent count": 0,
                 "flower agent count": 0,
+                "unspecialized agent count": 0,
             }
             for month in self.months
         }
@@ -324,7 +327,7 @@ class EnvironmentHistory:
                 nutrient_avg_per_agent[month][nutrient] += count
 
             for agent_type, count in agent_type_counts.items():
-                if agent_type.lower() in ["leaf", "root", "flower"]:
+                if agent_type.lower() in ["leaf", "root", "flower", "unspecialized"]:
                     agent_key = f"{agent_type.lower()} agent count"
                     agent_type_count_per_month[month][agent_key] += count
 
