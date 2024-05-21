@@ -22,12 +22,12 @@ def main():
 
     pprint(counts_dict)
 
-    run = wandb.init(project="environment_simulation_data_advanced", job_type="general", name="t_testing")
-    run.define_metric("P-value")
-    run.define_metric("T-statistic")
-    run.define_metric("Month")
-
     for agent_type, year_data in counts_dict.items():
+        run = wandb.init(project="naco_statistics", job_type="general", name=f"{agent_type.capitalize()}s")
+        run.define_metric("P-value")
+        run.define_metric("T-statistic")
+        run.define_metric("Month")
+
         for month, month_data in year_data.items():
             normal_counts = month_data["normal"]
             warm_counts = month_data["warm"]
@@ -35,10 +35,19 @@ def main():
             result = ttest_rel(normal_counts, warm_counts)
             wandb.log({
                 "Month": month,
-                f"P-value {agent_type}": result["pvalue"],
-                f"T-statistic {agent_type}": result["statistic"],
+                f"P-value": result[1],
+                f"T-statistic": result[0],
             })
 
+        run.finish()
+    
+    run = wandb.init(project="naco_statistics", job_type="general", name=f"Threshold")
+    run.define_metric("P-value")
+    for month in range(1, 13):
+        wandb.log({
+            "P-value": 0.05,
+            "Month": month
+        })
     run.finish()
     
 
