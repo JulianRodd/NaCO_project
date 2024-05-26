@@ -1,6 +1,6 @@
 <p align="center">
 
-<img width="400" height="200" src="https://user-images.githubusercontent.com/75753187/123358567-aac7b900-d539-11eb-8275-0b380264bb4c.png" alt="my banner">
+<img width="400" height="200" src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/simulation.png?raw=true">
 
 </p>
 
