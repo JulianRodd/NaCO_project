@@ -70,42 +70,54 @@ The following table explains each folder in the repository and its purpose.
 
 # Results
 
+# Results
+
 Here are the results of our simulations, showcasing the impact of sudden temperature increases in winter on plant biomass throughout the year.
 
 <table>
   <tr>
-    <td><img src="path/to/image1.png" alt="Image 1" width="300"/></td>
-    <td><img src="path/to/image2.png" alt="Image 2" width="300"/></td>
-    <td><img src="path/to/image3.png" alt="Image 3" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-0-j9r1cpura.png?raw=true" alt="Section-2-Panel-0-j9r1cpura" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-0-lb8fyomrk.png?raw=true" alt="Section-2-Panel-0-lb8fyomrk" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-1-ojl7zqhlo.png?raw=true" alt="Section-2-Panel-1-ojl7zqhlo" width="300"/></td>
   </tr>
   <tr>
-    <td><img src="path/to/image4.png" alt="Image 4" width="300"/></td>
-    <td><img src="path/to/image5.png" alt="Image 5" width="300"/></td>
-    <td><img src="path/to/image6.png" alt="Image 6" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-1-sqi2jsjju.png?raw=true" alt="Section-2-Panel-1-sqi2jsjju" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-10-lz0y2d8ln%20(2).png?raw=true" alt="Section-2-Panel-10-lz0y2d8ln" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-11-zr9sd5on8.png?raw=true" alt="Section-2-Panel-11-zr9sd5on8" width="300"/></td>
   </tr>
   <tr>
-    <td><img src="path/to/image7.png" alt="Image 7" width="300"/></td>
-    <td><img src="path/to/image8.png" alt="Image 8" width="300"/></td>
-    <td><img src="path/to/image9.png" alt="Image 9" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-2-2jgx3uvuw.png?raw=true" alt="Section-2-Panel-2-2jgx3uvuw" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-2-744uunw6t.png?raw=true" alt="Section-2-Panel-2-744uunw6t" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-3-0ybf6n8s3.png?raw=true" alt="Section-2-Panel-3-0ybf6n8s3" width="300"/></td>
   </tr>
   <tr>
-    <td><img src="path/to/image10.png" alt="Image 10" width="300"/></td>
-    <td><img src="path/to/image11.png" alt="Image 11" width="300"/></td>
-    <td><img src="path/to/image12.png" alt="Image 12" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-3-wbs9psiys.png?raw=true" alt="Section-2-Panel-3-wbs9psiys" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-4-huz4wtr1a.png?raw=true" alt="Section-2-Panel-4-huz4wtr1a" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-4-qz4pfsynp.png?raw=true" alt="Section-2-Panel-4-qz4pfsynp" width="300"/></td>
   </tr>
   <tr>
-    <td><img src="path/to/image13.png" alt="Image 13" width="300"/></td>
-    <td><img src="path/to/image14.png" alt="Image 14" width="300"/></td>
-    <td><img src="path/to/image15.png" alt="Image 15" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-5-gpbbwc7k2.png?raw=true" alt="Section-2-Panel-5-gpbbwc7k2" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-5-tyyd90hhf.png?raw=true" alt="Section-2-Panel-5-tyyd90hhf" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-6-00b6vefb3.png?raw=true" alt="Section-2-Panel-6-00b6vefb3" width="300"/></td>
   </tr>
   <tr>
-    <td><img src="path/to/image16.png" alt="Image 16" width="300"/></td>
-    <td><img src="path/to/image17.png" alt="Image 17" width="300"/></td>
-    <td><img src="path/to/image18.png" alt="Image 18" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-6-o6fiexhau.png?raw=true" alt="Section-2-Panel-6-o6fiexhau" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-7-52xwhdhql.png?raw=true" alt="Section-2-Panel-7-52xwhdhql" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-7-ob5f4qybg.png?raw=true" alt="Section-2-Panel-7-ob5f4qybg" width="300"/></td>
   </tr>
   <tr>
-    <td><img src="path/to/image19.png" alt="Image 19" width="300"/></td>
-    <td><img src="path/to/image20.png" alt="Image 20" width="300"/></td>
-     <td><img src="path/to/image20.png" alt="Image 20" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-8-61ecpdsvc.png?raw=true" alt="Section-2-Panel-8-61ecpdsvc" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-8-8qpet55o6.png?raw=true" alt="Section-2-Panel-8-8qpet55o6" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-9-0c9ley12o.png?raw=true" alt="Section-2-Panel-9-0c9ley12o" width="300"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-9-kjqph0bfi.png?raw=true" alt="Section-2-Panel-9-kjqph0bfi" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/air_soil_burnins.png?raw=true" alt="air_soil_burnins" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/pvalues.png?raw=true" alt="pvalues" width="300"/></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/root-to-leaves.png?raw=true" alt="root-to-leaves" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/simulation.png?raw=true" alt="simulation" width="300"/></td>
+    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/tstatistic.png?raw=true" alt="tstatistic" width="300"/></td>
   </tr>
 </table>
