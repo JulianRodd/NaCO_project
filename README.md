@@ -1,14 +1,12 @@
 <p align="center">
 
-<img width="400" height="200" src="https://user-images.githubusercontent.com/75753187/123358567-aac7b900-d539-11eb-8275-0b380264bb4c.png" alt="my banner">
+<img width="400" height="200" src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/simulation.png?raw=true">
 
 </p>
 
 
 
 # Simulating the Effect of Sudden Temperature Increase in Winter on Plant Biomass - A BioMakerCA Project
-
-![](https://github.com/Your_Repository_Name/Your_GIF_Name.gif)
 
 This repository is made for the project described in "Simulating the effect of sudden temperature increase in winter on plant biomass" by Janneke Nouwen, Laura Stritzel, and Julian Roddeman.
 This repository is based on the [self-organising-systems](https://github.com/google-research/self-organising-systems/tree/master) repository and see [this web article](https://google-research.github.io/self-organising-systems/2023/biomaker-ca/) or [this paper](https://arxiv.org/abs/2307.09320) for explanations of the base package.
@@ -20,6 +18,9 @@ Climate change is causing changes in ecosystems, leading to unusual plant behavi
 The main research question is: **How do sudden warmer temperatures in winter influence plant biomass throughout the year?**
 
 To answer this question, we created simulations using Python 3.11 and the Biomaker CA package, which employs Cellular Automata (CA) to model biomes. By simulating seasonal changes and introducing a sudden temperature increase in winter, we observe plant growth and reproduction to understand the impacts of an unusually warm winter. This repository includes all necessary scripts, configurations, and results for replicating our study.
+
+
+![](https://github.com/JulianRodd/NaCO_project/blob/main/videos/spedup.gif?raw=true)
 
 ## Install Requirements
 
