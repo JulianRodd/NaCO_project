@@ -50,7 +50,7 @@ To see the progress of simulations and have a feature-rich analysis dashboard, W
 
 ## Starting Point
 
-To guide you through making the simulations, we have created a starting point Jupyter notebook. This notebook explains how to run the simulations without having to go through all of the scripts.
+To guide you through making the simulations, we have created a starting point Jupyter notebook. This notebook explains how to run the simulations without having to go through all of the scripts. Click here to open the starting point: [Starting Point Jupyter Notebook](./starting_point.ipynb).
 
 ## Repository Structure
 
@@ -63,16 +63,11 @@ The following table explains each folder in the repository and its purpose.
 | `overrides`        | Overrides scripts in the base BiomakerCA package to add desired functionality.               |
 | `notebooks`        | Notebooks used for trying out experiments.                          |
 | `analysis_results` | Provides CSV file checkpoints of different simulations over the years for statistical tests. |
-| `images`           | Storage for all images used in the project.                                                  |
+| `images`           | All images used in the project.                                                  |
 | `videos`           | Contains simulation output videos.                                                          |
 
 
 ## Results
-
-# Results
-
-# Results
-
 Here are the results of our simulations, showcasing the impact of sudden temperature increases in winter on plant biomass throughout the year.
 
 <table>

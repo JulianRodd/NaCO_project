@@ -38,7 +38,7 @@ TEXT_THICKNESS = 1
 # Constants
 NUM_SIMS = 25
 MAX_WORKERS = 1
-TWENTY_YEAR_DAYS = 20 * 365
+DAYS_IN_BURN_IN = 20 * 365
 SEASON_TYPES = ["warm", "cold"]
 BURN_IN_FOLDER = "twenty_year_burn_in"
 BURN_IN_CONFIG_NAME = "twenty_year_burn_in"
@@ -48,6 +48,8 @@ DAYS_PER_YEAR = 365
 SIMULATION_YEARS = 5
 PICKLE_DIR = "pickles"
 EARLY_EXTINCTION_MONTH_COUNT = 6
+
+os.makedirs(PICKLE_DIR, exist_ok=True)
 
 
 def pad_text(img, text):
@@ -197,7 +199,7 @@ def run_single_simulation(type_of_january, sim, twenty_year_burn_in_env):
         mutator,
         key,
         programs,
-        days_since_start=TWENTY_YEAR_DAYS,
+        days_since_start=DAYS_IN_BURN_IN,
         folder=folder,
         sim=sim,
     )
@@ -260,11 +262,10 @@ def run_burn_in_simulation(sim):
 
         except ValueError as e:
             logger.warning(f"Early extinction detected: {e}. Retrying with new seed.")
-            seed_simulation += 100
+            seed_simulation += 1
 
 
 def main():
-    os.makedirs(PICKLE_DIR, exist_ok=True)
 
     burn_in_environments = [None] * NUM_SIMS
 

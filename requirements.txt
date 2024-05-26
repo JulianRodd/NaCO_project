@@ -4,10 +4,7 @@ matplotlib==3.7.2
 mediapy==1.2.0
 numpy==1.23.5
 opencv_python==4.9.0.80
-opencv_python_headless==4.9.0.80
 pandas==2.0.3
 scipy==1.13.1
-self_organising_systems==0.1
 tqdm==4.66.1
-configs==3.0.3
 wandb==0.17.0
