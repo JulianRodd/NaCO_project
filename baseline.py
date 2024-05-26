@@ -1,7 +1,9 @@
 import json
 import random
-
+import json
 import cv2
+from datetime import datetime
+
 import jax.random as jr
 import mediapy as media
 import numpy as np
@@ -52,6 +54,8 @@ def pad_text(img, text):
 
 
 def make_configs(base_config: SeasonsConfig):
+    now = datetime.now()
+    current_time = now.strftime("%H-%M-%S")
     run_id = random.randint(0, 99999999)
     config_dict = dict(
         (name, getattr(base_config, name))
@@ -62,9 +66,9 @@ def make_configs(base_config: SeasonsConfig):
         if "key" in key or isinstance(value, np.ndarray):
             config_dict[key] = [int(i) if i > 0 else float(i) for i in value]
 
-    with open(f"{base_config.out_file}_config_{run_id}.json", "w") as file:
+    with open(f"{base_config.out_file}_config_{current_time}_{run_id}.json", "w") as file:
         json.dump(config_dict, file, indent=4)
-    base_config.out_file = f"{base_config.out_file}_video_{run_id}.mp4"
+    base_config.out_file = f"{base_config.out_file}_video_{current_time}_{run_id}.mp4"
 
     env, env_config = evm.get_env_and_config(
         base_config.ec_id,
