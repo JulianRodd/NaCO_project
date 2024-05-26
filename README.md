@@ -114,11 +114,6 @@ Here are the results of our simulations, showcasing the impact of sudden tempera
   <tr>
     <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/Section-2-Panel-9-kjqph0bfi.png?raw=true" alt="Section-2-Panel-9-kjqph0bfi" width="300"/></td>
     <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/air_soil_burnins.png?raw=true" alt="air_soil_burnins" width="300"/></td>
-    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/pvalues.png?raw=true" alt="pvalues" width="300"/></td>
-  </tr>
-  <tr>
     <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/root-to-leaves.png?raw=true" alt="root-to-leaves" width="300"/></td>
-    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/simulation.png?raw=true" alt="simulation" width="300"/></td>
-    <td><img src="https://github.com/JulianRodd/NaCO_project/blob/main/images/weights_and_biases/tstatistic.png?raw=true" alt="tstatistic" width="300"/></td>
   </tr>
 </table>
