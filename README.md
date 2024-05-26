@@ -59,6 +59,7 @@ The following table explains each folder in the repository and its purpose.
 | Folder             | Description                                                                                  |
 |--------------------|----------------------------------------------------------------------------------------------|
 | `utils`            | Contains all the necessary Python scripts to run, evaluate, and set up the experiments.      |
+| `scripts`            | Scripts used to run experiments.     |
 | `configs`          | Configurations used for simulations, specifically season-config for main simulations.        |
 | `overrides`        | Overrides scripts in the base BiomakerCA package to add desired functionality.               |
 | `notebooks`        | Notebooks used for trying out experiments.                          |
