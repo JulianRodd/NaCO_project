@@ -8,7 +8,7 @@
 
 # Simulating the Effect of Sudden Temperature Increase in Winter on Plant Biomass - A BioMakerCA Project
 
-![](https://github.com/Your_Repository_Name/Your_GIF_Name.gif)
+![](https://github.com/JulianRodd/NaCO_project/blob/main/videos/spedup.gif?raw=true)
 
 This repository is made for the project described in "Simulating the effect of sudden temperature increase in winter on plant biomass" by Janneke Nouwen, Laura Stritzel, and Julian Roddeman.
 This repository is based on the [self-organising-systems](https://github.com/google-research/self-organising-systems/tree/master) repository and see [this web article](https://google-research.github.io/self-organising-systems/2023/biomaker-ca/) or [this paper](https://arxiv.org/abs/2307.09320) for explanations of the base package.
